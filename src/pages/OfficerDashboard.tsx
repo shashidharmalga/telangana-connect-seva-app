@@ -30,6 +30,37 @@ const OfficerDashboard = () => {
     "District Collector": ["Administrative Issues", "Revenue Issues", "Land Records", "Emergency Services"]
   };
 
+  // Default complaints for each department
+  const getDefaultComplaints = (department: string) => {
+    const issueTypes = departmentIssueMapping[department] || [];
+    const defaultComplaints = [];
+    
+    issueTypes.forEach((issueType, index) => {
+      for (let i = 1; i <= 4; i++) {
+        defaultComplaints.push({
+          id: `DEF-${department.substring(0, 3).toUpperCase()}-${index + 1}-${i}`,
+          district: ["Hyderabad", "Warangal Urban", "Nizamabad", "Karimnagar"][Math.floor(Math.random() * 4)],
+          village: [`Village ${i}`, `Town ${i}`, `Area ${i}`, `Colony ${i}`][i - 1],
+          issueType: issueType,
+          description: `Sample ${issueType.toLowerCase()} complaint #${i}. This is a detailed description of the issue that needs attention from the ${department}.`,
+          status: ["Pending", "In Progress", "Completed"][Math.floor(Math.random() * 3)],
+          priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
+          submittedDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+          location: `Sample location for ${issueType}`,
+          photos: [
+            "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=300&fit=crop",
+            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop"
+          ],
+          videos: [
+            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+          ]
+        });
+      }
+    });
+    
+    return defaultComplaints;
+  };
+
   useEffect(() => {
     const stored = localStorage.getItem('officerData');
     if (stored) {
@@ -38,11 +69,18 @@ const OfficerDashboard = () => {
       navigate('/login');
     }
 
-    // Load all complaints from localStorage
+    // Load complaints from localStorage and add default complaints
     const storedComplaints = localStorage.getItem('officerComplaints');
-    if (storedComplaints) {
-      setComplaints(JSON.parse(storedComplaints));
+    let allComplaints = storedComplaints ? JSON.parse(storedComplaints) : [];
+    
+    // Add default complaints if officer data exists
+    if (stored) {
+      const officer = JSON.parse(stored);
+      const defaultComplaints = getDefaultComplaints(officer.govField);
+      allComplaints = [...allComplaints, ...defaultComplaints];
     }
+    
+    setComplaints(allComplaints);
   }, [navigate]);
 
   useEffect(() => {

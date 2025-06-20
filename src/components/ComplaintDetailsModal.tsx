@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, MapPin, User, FileText } from "lucide-react";
+import { Calendar, MapPin, User, FileText, Image, Video, ExternalLink } from "lucide-react";
 
 interface ComplaintDetailsModalProps {
   complaint: any;
@@ -21,7 +21,7 @@ const ComplaintDetailsModal = ({ complaint, open, onClose, onStatusUpdate }: Com
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-xl font-bold text-gray-800">
             Complaint Details - {complaint.id}
@@ -92,20 +92,78 @@ const ComplaintDetailsModal = ({ complaint, open, onClose, onStatusUpdate }: Com
             </div>
           )}
 
-          {/* Media Files Placeholder */}
-          <div>
-            <h3 className="font-semibold mb-2">Attached Files:</h3>
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="bg-gray-100 p-4 rounded-lg text-center">
-                <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Photos will appear here</p>
-              </div>
-              <div className="bg-gray-100 p-4 rounded-lg text-center">
-                <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Videos will appear here</p>
+          {/* Photos */}
+          {complaint.photos && complaint.photos.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Image className="w-5 h-5" />
+                Attached Photos:
+              </h3>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {complaint.photos.map((photo: string, index: number) => (
+                  <div key={index} className="relative group">
+                    <img 
+                      src={photo} 
+                      alt={`Complaint photo ${index + 1}`}
+                      className="w-full h-48 object-cover rounded-lg border-2 border-gray-200 hover:border-blue-400 transition-colors cursor-pointer"
+                      onClick={() => window.open(photo, '_blank')}
+                    />
+                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="bg-white/90 hover:bg-white"
+                        onClick={() => window.open(photo, '_blank')}
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+
+          {/* Videos */}
+          {complaint.videos && complaint.videos.length > 0 && (
+            <div>
+              <h3 className="font-semibold mb-3 flex items-center gap-2">
+                <Video className="w-5 h-5" />
+                Attached Videos:
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {complaint.videos.map((video: string, index: number) => (
+                  <div key={index} className="relative">
+                    <video 
+                      controls
+                      className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
+                      preload="metadata"
+                    >
+                      <source src={video} type="video/mp4" />
+                      Your browser does not support the video tag.
+                    </video>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Fallback for no media */}
+          {(!complaint.photos || complaint.photos.length === 0) && (!complaint.videos || complaint.videos.length === 0) && (
+            <div>
+              <h3 className="font-semibold mb-2">Attached Files:</h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="bg-gray-100 p-4 rounded-lg text-center">
+                  <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No photos attached</p>
+                </div>
+                <div className="bg-gray-100 p-4 rounded-lg text-center">
+                  <FileText className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">No videos attached</p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Status Update */}
           <div className="border-t pt-4">
