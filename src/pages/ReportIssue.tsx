@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, Camera, MapPin, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const ReportIssue = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     district: "",
     village: "",
@@ -37,9 +38,59 @@ const ReportIssue = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Issue reported:", formData);
-    // In a real app, this would submit to backend
-    navigate('/track-progress');
+    
+    if (!formData.district || !formData.village || !formData.issueType || !formData.description) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate unique ID
+    const reportId = `TG${Date.now().toString().slice(-6)}`;
+    
+    // Create report object
+    const newReport = {
+      id: reportId,
+      ...formData,
+      status: "Pending" as const,
+      priority: "Medium" as const,
+      submittedDate: new Date().toLocaleDateString('en-IN')
+    };
+
+    // Save to user reports
+    const existingUserReports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    existingUserReports.push(newReport);
+    localStorage.setItem('userReports', JSON.stringify(existingUserReports));
+
+    // Save to officer complaints (for officer dashboard)
+    const existingOfficerComplaints = JSON.parse(localStorage.getItem('officerComplaints') || '[]');
+    existingOfficerComplaints.push(newReport);
+    localStorage.setItem('officerComplaints', JSON.stringify(existingOfficerComplaints));
+
+    console.log("Issue reported:", newReport);
+    
+    toast({
+      title: "Report Submitted Successfully!",
+      description: `Your report ID is ${reportId}. You can track its progress in My Reports.`,
+    });
+
+    // Reset form
+    setFormData({
+      district: "",
+      village: "",
+      issueType: "",
+      officer: "",
+      description: "",
+      location: ""
+    });
+
+    // Navigate to My Reports after a short delay
+    setTimeout(() => {
+      navigate('/my-reports');
+    }, 2000);
   };
 
   return (
@@ -68,7 +119,7 @@ const ReportIssue = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="district">District / जिला / జిల్లా</Label>
+                    <Label htmlFor="district">District / जिला / జిల్లా *</Label>
                     <Select value={formData.district} onValueChange={(value) => 
                       setFormData({...formData, district: value})
                     }>
@@ -86,19 +137,20 @@ const ReportIssue = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="village">Village / गांव / గ్రామం</Label>
+                    <Label htmlFor="village">Village / गांव / గ్రామం *</Label>
                     <Input
                       id="village"
                       value={formData.village}
                       onChange={(e) => setFormData({...formData, village: e.target.value})}
                       placeholder="Enter village name"
+                      required
                     />
                   </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="issueType">Issue Type / समस्या प्रकार / సమస్య రకం</Label>
+                    <Label htmlFor="issueType">Issue Type / समस्या प्रकार / సమస్య రకం *</Label>
                     <Select value={formData.issueType} onValueChange={(value) => 
                       setFormData({...formData, issueType: value})
                     }>
@@ -135,13 +187,14 @@ const ReportIssue = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description / विवरण / వివరణ</Label>
+                  <Label htmlFor="description">Description / विवरण / వివరణ *</Label>
                   <Textarea
                     id="description"
                     value={formData.description}
                     onChange={(e) => setFormData({...formData, description: e.target.value})}
                     placeholder="Describe the issue in detail..."
                     rows={4}
+                    required
                   />
                 </div>
 

@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 const OfficerDashboard = () => {
   const [officerData, setOfficerData] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [complaints, setComplaints] = useState<any[]>([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,6 +19,12 @@ const OfficerDashboard = () => {
       setOfficerData(JSON.parse(stored));
     } else {
       navigate('/login');
+    }
+
+    // Load complaints from localStorage
+    const storedComplaints = localStorage.getItem('officerComplaints');
+    if (storedComplaints) {
+      setComplaints(JSON.parse(storedComplaints));
     }
   }, [navigate]);
 
@@ -31,20 +38,22 @@ const OfficerDashboard = () => {
     "Khammam", "Nalgonda", "Mahbubnagar", "Rangareddy", "Adilabad", "Mancherial"
   ];
 
-  const mockComplaints = [
-    { id: "TG001", district: "Hyderabad", village: "Banjara Hills", type: "Roads", status: "Pending", priority: "High" },
-    { id: "TG002", district: "Warangal Urban", village: "Hanamkonda", type: "Water Supply", status: "In Progress", priority: "Medium" },
-    { id: "TG003", district: "Medak", village: "Medak Town", type: "Electricity", status: "Completed", priority: "Low" },
-    { id: "TG004", district: "Nizamabad", village: "Nizamabad Rural", type: "Healthcare", status: "Pending", priority: "High" },
-  ];
+  // Calculate stats from actual complaints
+  const totalComplaints = complaints.length;
+  const pendingComplaints = complaints.filter(c => c.status === "Pending").length;
+  const inProgressComplaints = complaints.filter(c => c.status === "In Progress").length;
+  const completedComplaints = complaints.filter(c => c.status === "Completed").length;
 
-  const heatMapData = [
-    { district: "Hyderabad", complaints: 45, resolved: 32 },
-    { district: "Warangal Urban", complaints: 38, resolved: 28 },
-    { district: "Medak", complaints: 22, resolved: 20 },
-    { district: "Nizamabad", complaints: 35, resolved: 25 },
-    { district: "Karimnagar", complaints: 30, resolved: 22 },
-  ];
+  // Generate heat map data from actual complaints
+  const heatMapData = districts.map(district => {
+    const districtComplaints = complaints.filter(c => c.district === district);
+    const resolved = districtComplaints.filter(c => c.status === "Completed").length;
+    return {
+      district,
+      complaints: districtComplaints.length,
+      resolved
+    };
+  }).filter(item => item.complaints > 0);
 
   if (!officerData) return null;
 
@@ -85,7 +94,7 @@ const OfficerDashboard = () => {
               <div className="flex items-center gap-4">
                 <AlertTriangle className="w-8 h-8 text-red-500" />
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">156</p>
+                  <p className="text-2xl font-bold text-gray-800">{totalComplaints}</p>
                   <p className="text-gray-600">Total Complaints</p>
                 </div>
               </div>
@@ -97,7 +106,7 @@ const OfficerDashboard = () => {
               <div className="flex items-center gap-4">
                 <Clock className="w-8 h-8 text-yellow-500" />
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">47</p>
+                  <p className="text-2xl font-bold text-gray-800">{pendingComplaints}</p>
                   <p className="text-gray-600">Pending</p>
                 </div>
               </div>
@@ -109,7 +118,7 @@ const OfficerDashboard = () => {
               <div className="flex items-center gap-4">
                 <FileText className="w-8 h-8 text-blue-500" />
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">62</p>
+                  <p className="text-2xl font-bold text-gray-800">{inProgressComplaints}</p>
                   <p className="text-gray-600">In Progress</p>
                 </div>
               </div>
@@ -121,7 +130,7 @@ const OfficerDashboard = () => {
               <div className="flex items-center gap-4">
                 <CheckCircle className="w-8 h-8 text-green-500" />
                 <div>
-                  <p className="text-2xl font-bold text-gray-800">47</p>
+                  <p className="text-2xl font-bold text-gray-800">{completedComplaints}</p>
                   <p className="text-gray-600">Completed</p>
                 </div>
               </div>
@@ -130,36 +139,38 @@ const OfficerDashboard = () => {
         </div>
 
         {/* Complaint Heat Map */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-xl text-gray-800">District-wise Complaint Heat Map</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {heatMapData.map((item) => (
-                <div key={item.district} className="bg-gradient-to-br from-red-100 to-orange-100 p-4 rounded-lg border-2 border-red-200">
-                  <h3 className="font-semibold text-gray-800 mb-2">{item.district}</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Total Complaints:</span>
-                      <span className="font-bold text-red-600">{item.complaints}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Resolved:</span>
-                      <span className="font-bold text-green-600">{item.resolved}</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full" 
-                        style={{width: `${(item.resolved / item.complaints) * 100}%`}}
-                      ></div>
+        {heatMapData.length > 0 && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle className="text-xl text-gray-800">District-wise Complaint Heat Map</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {heatMapData.map((item) => (
+                  <div key={item.district} className="bg-gradient-to-br from-red-100 to-orange-100 p-4 rounded-lg border-2 border-red-200">
+                    <h3 className="font-semibold text-gray-800 mb-2">{item.district}</h3>
+                    <div className="space-y-2">
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Total Complaints:</span>
+                        <span className="font-bold text-red-600">{item.complaints}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-sm text-gray-600">Resolved:</span>
+                        <span className="font-bold text-green-600">{item.resolved}</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-green-500 h-2 rounded-full" 
+                          style={{width: `${item.complaints > 0 ? (item.resolved / item.complaints) * 100 : 0}%`}}
+                        ></div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Recent Complaints */}
         <Card>
@@ -182,57 +193,64 @@ const OfficerDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b-2 border-gray-200">
-                    <th className="text-left p-3 font-semibold text-gray-700">Complaint ID</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">District</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">Village</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">Issue Type</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">Status</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">Priority</th>
-                    <th className="text-left p-3 font-semibold text-gray-700">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mockComplaints
-                    .filter(complaint => !selectedDistrict || complaint.district === selectedDistrict)
-                    .map((complaint) => (
-                    <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="p-3 font-medium text-blue-600">{complaint.id}</td>
-                      <td className="p-3">{complaint.district}</td>
-                      <td className="p-3">{complaint.village}</td>
-                      <td className="p-3">{complaint.type}</td>
-                      <td className="p-3">
-                        <Badge 
-                          variant={complaint.status === 'Completed' ? 'default' : 'secondary'}
-                          className={`${complaint.status === 'Completed' ? 'bg-green-500' : 
-                                      complaint.status === 'In Progress' ? 'bg-blue-500' : 'bg-yellow-500'}`}
-                        >
-                          {complaint.status}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <Badge 
-                          variant="outline"
-                          className={`${complaint.priority === 'High' ? 'border-red-500 text-red-600' : 
-                                      complaint.priority === 'Medium' ? 'border-yellow-500 text-yellow-600' : 
-                                      'border-green-500 text-green-600'}`}
-                        >
-                          {complaint.priority}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <Button size="sm" className="bg-red-500 hover:bg-red-600">
-                          View Details
-                        </Button>
-                      </td>
+            {complaints.length === 0 ? (
+              <div className="text-center py-8">
+                <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-600">No complaints submitted yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b-2 border-gray-200">
+                      <th className="text-left p-3 font-semibold text-gray-700">Complaint ID</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">District</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Village</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Issue Type</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Status</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Priority</th>
+                      <th className="text-left p-3 font-semibold text-gray-700">Action</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {complaints
+                      .filter(complaint => !selectedDistrict || complaint.district === selectedDistrict)
+                      .map((complaint) => (
+                      <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="p-3 font-medium text-blue-600">{complaint.id}</td>
+                        <td className="p-3">{complaint.district}</td>
+                        <td className="p-3">{complaint.village}</td>
+                        <td className="p-3">{complaint.issueType}</td>
+                        <td className="p-3">
+                          <Badge 
+                            variant={complaint.status === 'Completed' ? 'default' : 'secondary'}
+                            className={`${complaint.status === 'Completed' ? 'bg-green-500' : 
+                                        complaint.status === 'In Progress' ? 'bg-blue-500' : 'bg-yellow-500'}`}
+                          >
+                            {complaint.status}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <Badge 
+                            variant="outline"
+                            className={`${complaint.priority === 'High' ? 'border-red-500 text-red-600' : 
+                                        complaint.priority === 'Medium' ? 'border-yellow-500 text-yellow-600' : 
+                                        'border-green-500 text-green-600'}`}
+                          >
+                            {complaint.priority}
+                          </Badge>
+                        </td>
+                        <td className="p-3">
+                          <Button size="sm" className="bg-red-500 hover:bg-red-600">
+                            View Details
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

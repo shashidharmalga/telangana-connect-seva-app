@@ -11,6 +11,7 @@ import TrackProgress from "./pages/TrackProgress";
 import Login from "./pages/Login";
 import OfficerDashboard from "./pages/OfficerDashboard";
 import Escalate from "./pages/Escalate";
+import MyReports from "./pages/MyReports";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/report-issue" element={<ReportIssue />} />
           <Route path="/schemes" element={<Schemes />} />
           <Route path="/track-progress" element={<TrackProgress />} />
+          <Route path="/my-reports" element={<MyReports />} />
           <Route path="/login" element={<Login />} />
           <Route path="/officer-dashboard" element={<OfficerDashboard />} />
           <Route path="/escalate" element={<Escalate />} />
