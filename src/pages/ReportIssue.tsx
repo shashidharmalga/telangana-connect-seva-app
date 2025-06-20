@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Camera, MapPin, Mic, ArrowLeft } from "lucide-react";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Upload, Camera, MapPin, Mic, ArrowLeft, Phone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -15,6 +16,8 @@ const ReportIssue = () => {
   const { toast } = useToast();
   const { t } = useLanguage();
   const [formData, setFormData] = useState({
+    name: "",
+    number: "",
     district: "",
     village: "",
     issueType: "",
@@ -25,6 +28,10 @@ const ReportIssue = () => {
   const [hasPhoto, setHasPhoto] = useState(false);
   const [hasVideo, setHasVideo] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpValue, setOtpValue] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,6 +49,58 @@ const ReportIssue = () => {
     "Village Panchayat Secretary", "Mandal Officer", "PWD Officer", 
     "Irrigation Officer", "District Collector"
   ];
+
+  const generateOtp = () => {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setGeneratedOtp(otp);
+    return otp;
+  };
+
+  const handleSendOtp = () => {
+    if (!formData.number || formData.number.length !== 10) {
+      toast({
+        title: "Invalid Number",
+        description: "Please enter a valid 10-digit mobile number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const otp = generateOtp();
+    setOtpSent(true);
+    console.log("Generated OTP:", otp); // In real app, this would be sent via SMS service
+    
+    toast({
+      title: "OTP Sent",
+      description: `OTP has been sent to ${formData.number}. Please check your messages.`,
+    });
+  };
+
+  const handleVerifyOtp = () => {
+    if (otpValue === generatedOtp) {
+      setOtpVerified(true);
+      toast({
+        title: "OTP Verified",
+        description: "Your mobile number has been verified successfully.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct OTP sent to your mobile number.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const sendConfirmationMessage = (reportId: string) => {
+    // In a real application, this would integrate with an SMS service
+    console.log(`Sending confirmation SMS to ${formData.number}: Your complaint has been registered with ID: ${reportId}. Track your progress on our portal.`);
+    
+    toast({
+      title: "Confirmation Sent",
+      description: `A confirmation message has been sent to ${formData.number} with your report ID: ${reportId}`,
+    });
+  };
 
   const handlePhotoCapture = () => {
     if (fileInputRef.current) {
@@ -90,10 +149,19 @@ const ReportIssue = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.district || !formData.village || !formData.issueType || !formData.description) {
+    if (!formData.name || !formData.number || !formData.district || !formData.village || !formData.issueType || !formData.description) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!otpVerified) {
+      toast({
+        title: "Mobile Not Verified",
+        description: "Please verify your mobile number with OTP before submitting.",
         variant: "destructive"
       });
       return;
@@ -134,6 +202,9 @@ const ReportIssue = () => {
 
     console.log("Issue reported:", newReport);
     
+    // Send confirmation message
+    sendConfirmationMessage(reportId);
+    
     toast({
       title: "Report Submitted Successfully!",
       description: `Your report ID is ${reportId}. You can track its progress in My Reports.`,
@@ -141,6 +212,8 @@ const ReportIssue = () => {
 
     // Reset form
     setFormData({
+      name: "",
+      number: "",
       district: "",
       village: "",
       issueType: "",
@@ -151,6 +224,10 @@ const ReportIssue = () => {
     setHasPhoto(false);
     setHasVideo(false);
     setCapturedPhoto(null);
+    setOtpSent(false);
+    setOtpVerified(false);
+    setOtpValue("");
+    setGeneratedOtp("");
 
     // Navigate to My Reports after a short delay
     setTimeout(() => {
@@ -183,6 +260,90 @@ const ReportIssue = () => {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information Section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-700">Personal Information</h3>
+                  
+                  <div>
+                    <Label htmlFor="name">Full Name / पूरा नाम / పూర్తి పేరు *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="number">Mobile Number / मोबाइल नंबर / మొబైల్ నంబర్ *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="number"
+                        value={formData.number}
+                        onChange={(e) => setFormData({...formData, number: e.target.value})}
+                        placeholder="Enter 10-digit mobile number"
+                        maxLength={10}
+                        pattern="[0-9]{10}"
+                        required
+                        disabled={otpVerified}
+                      />
+                      {!otpVerified && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={handleSendOtp}
+                          disabled={formData.number.length !== 10 || otpSent}
+                        >
+                          <Phone className="w-4 h-4 mr-2" />
+                          {otpSent ? 'OTP Sent' : 'Send OTP'}
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {otpSent && !otpVerified && (
+                    <div className="space-y-2">
+                      <Label htmlFor="otp">Enter OTP / OTP दर्ज करें / OTP నమోదు చేయండి</Label>
+                      <div className="flex items-center gap-4">
+                        <InputOTP
+                          maxLength={6}
+                          value={otpValue}
+                          onChange={(value) => setOtpValue(value)}
+                        >
+                          <InputOTPGroup>
+                            <InputOTPSlot index={0} />
+                            <InputOTPSlot index={1} />
+                            <InputOTPSlot index={2} />
+                            <InputOTPSlot index={3} />
+                            <InputOTPSlot index={4} />
+                            <InputOTPSlot index={5} />
+                          </InputOTPGroup>
+                        </InputOTP>
+                        <Button
+                          type="button"
+                          onClick={handleVerifyOtp}
+                          disabled={otpValue.length !== 6}
+                          size="sm"
+                        >
+                          Verify
+                        </Button>
+                      </div>
+                      <p className="text-sm text-gray-600">
+                        OTP sent to {formData.number}. Please check your messages.
+                      </p>
+                    </div>
+                  )}
+
+                  {otpVerified && (
+                    <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                      <p className="text-green-700 text-sm font-medium">
+                        ✓ Mobile number verified successfully
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="district">District / जिला / జిల్లా *</Label>
@@ -343,7 +504,7 @@ const ReportIssue = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg"
-                  disabled={!hasPhoto}
+                  disabled={!hasPhoto || !otpVerified}
                 >
                   {t('submitReport')} / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
                 </Button>
