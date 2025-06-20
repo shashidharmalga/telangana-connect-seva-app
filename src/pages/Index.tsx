@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -11,6 +12,106 @@ const Index = () => {
 
   const handleLanguageChange = (newLanguage: string) => {
     setLanguage(newLanguage as 'en' | 'te' | 'hi');
+  };
+
+  // Language-specific content
+  const getMotivationalText = () => {
+    switch (language) {
+      case 'hi':
+        return "जनता का कल्याण हमारा लक्ष्य";
+      case 'te':
+        return "ప్రజా కల్యాణమే మా లక్ష్యం";
+      default:
+        return "Public Welfare is Our Goal";
+    }
+  };
+
+  const getSubtitleText = () => {
+    switch (language) {
+      case 'hi':
+        return "जनता की आवाज़";
+      case 'te':
+        return "ప్రజల స్వరం";
+      default:
+        return "Voice of the People";
+    }
+  };
+
+  const getReportText = () => {
+    switch (language) {
+      case 'hi':
+        return "समस्या रिपोर्ट करें";
+      case 'te':
+        return "సమస్యను నివేదించండి";
+      default:
+        return "Report Your Issues";
+    }
+  };
+
+  const getTrackText = () => {
+    switch (language) {
+      case 'hi':
+        return "प्रगति ट्रैक करें";
+      case 'te':
+        return "పురోగతిని ట్రాక్ చేయండి";
+      default:
+        return "Track Your Progress";
+    }
+  };
+
+  const getSchemesText = () => {
+    switch (language) {
+      case 'hi':
+        return "योजनाएं";
+      case 'te':
+        return "పథకాలు";
+      default:
+        return "Government Schemes";
+    }
+  };
+
+  const getEscalateText = () => {
+    switch (language) {
+      case 'hi':
+        return "एस्केलेट करें";
+      case 'te':
+        return "ఎస్కలేట్ చేయండి";
+      default:
+        return "Escalate Issues";
+    }
+  };
+
+  const getFeaturesTitle = () => {
+    switch (language) {
+      case 'hi':
+        return "मुख्य विशेषताएं";
+      case 'te':
+        return "ముख్య లక్షణాలు";
+      default:
+        return "Key Features";
+    }
+  };
+
+  const getGovTitle = () => {
+    switch (language) {
+      case 'hi':
+        return "तेलंगाना सरकार";
+      case 'te':
+        return "తెలంగాణ ప్రభుత్వం";
+      default:
+        return "Government of Telangana";
+    }
+  };
+
+  const getGovSlogan = () => {
+    switch (language) {
+      case 'hi':
+        return "सबका साथ, सबका विकास, सबका विश्वास";
+      case 'te':
+        return "అందరి సహకారం, అందరి అభివృద్ధి, అందరి నమ్మకం";
+      default:
+        return "Together for Progress • Transparency • Accountability • Public Service";
+    }
   };
 
   return (
@@ -48,7 +149,7 @@ const Index = () => {
                   {t('title')}
                 </h1>
                 <p className="text-xl text-yellow-100 font-semibold">{t('subtitle')}</p>
-                <p className="text-yellow-200">जनता की आवाज़ • ప్రజల స్వరం • Voice of the People</p>
+                <p className="text-yellow-200">{getSubtitleText()}</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-4">
@@ -78,7 +179,7 @@ const Index = () => {
           {/* Motivational Banner */}
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-red-800 p-4 rounded-lg shadow-lg border-2 border-yellow-300">
             <p className="text-center font-bold text-lg">
-              "जनता का कल्याण हमारा लक्ष्य" | "ప్రజా కల్యాణమే మా లక్ష్యం" | "Public Welfare is Our Goal"
+              {getMotivationalText()}
             </p>
           </div>
         </div>
@@ -117,7 +218,7 @@ const Index = () => {
                 <AlertTriangle className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">{t('reportIssue')}</h3>
-              <p className="text-gray-600 mb-4">समस्या रिपोर्ट करें | సమస్యను నివేదించండి</p>
+              <p className="text-gray-600 mb-4">{getReportText()}</p>
               <Button 
                 onClick={() => navigate('/report-issue')}
                 className="w-full bg-red-500 hover:bg-red-600"
@@ -133,7 +234,7 @@ const Index = () => {
                 <Search className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">{t('trackProgress')}</h3>
-              <p className="text-gray-600 mb-4">प्रगति ट्रैक करें | పురోగతిని ట్రాక్ చేయండి</p>
+              <p className="text-gray-600 mb-4">{getTrackText()}</p>
               <Button 
                 onClick={() => navigate('/track-progress')}
                 className="w-full bg-blue-500 hover:bg-blue-600"
@@ -149,7 +250,7 @@ const Index = () => {
                 <Award className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">{t('schemes')}</h3>
-              <p className="text-gray-600 mb-4">योजनाएं | పథకాలు</p>
+              <p className="text-gray-600 mb-4">{getSchemesText()}</p>
               <Button 
                 onClick={() => navigate('/schemes')}
                 className="w-full bg-green-500 hover:bg-green-600"
@@ -165,7 +266,7 @@ const Index = () => {
                 <ArrowUp className="w-8 h-8 text-white" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">{t('escalate')}</h3>
-              <p className="text-gray-600 mb-4">एस्केलेट करें | ఎస్కలేట్ చేయండి</p>
+              <p className="text-gray-600 mb-4">{getEscalateText()}</p>
               <Button 
                 onClick={() => navigate('/escalate')}
                 className="w-full bg-purple-500 hover:bg-purple-600"
@@ -179,7 +280,7 @@ const Index = () => {
         {/* Key Features Section */}
         <Card className="mb-12 border-4 border-yellow-400 bg-gradient-to-r from-yellow-50 to-orange-50">
           <CardHeader className="bg-gradient-to-r from-red-600 to-orange-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl text-center">मुख्य विशेषताएं | ముख్య లక్షణాలు | Key Features</CardTitle>
+            <CardTitle className="text-2xl text-center">{getFeaturesTitle()}</CardTitle>
           </CardHeader>
           <CardContent className="p-8">
             <div className="grid md:grid-cols-3 gap-8">
@@ -211,7 +312,7 @@ const Index = () => {
         {/* Government Information */}
         <Card className="border-4 border-green-400 bg-gradient-to-r from-green-50 to-emerald-50">
           <CardHeader className="bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-lg">
-            <CardTitle className="text-2xl text-center">तेलंगाना सरकार | తెలంగాణ ప్రభుత్వం | Government of Telangana</CardTitle>
+            <CardTitle className="text-2xl text-center">{getGovTitle()}</CardTitle>
           </CardHeader>
           <CardContent className="p-8">
             <div className="text-center">
@@ -227,7 +328,7 @@ const Index = () => {
                 </div>
               </div>
               <p className="text-lg text-gray-700 leading-relaxed mb-4">
-                "सबका साथ, सबका विकास, सबका विश्वास" | "అందరి సహకారం, అందరి అభివృద్ధి, అందరి నమ్మకం"
+                "{getGovSlogan()}"
               </p>
               <p className="text-gray-600">
                 Together for Progress • Transparency • Accountability • Public Service
