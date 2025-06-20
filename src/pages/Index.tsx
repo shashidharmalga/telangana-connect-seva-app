@@ -1,10 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertTriangle, Search, Award, ArrowUp, Users, Clock, Shield, MapPin } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertTriangle, Search, Award, ArrowUp, Users, Clock, Shield, MapPin, Globe } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { language, setLanguage, t } = useLanguage();
+
+  const handleLanguageChange = (newLanguage: string) => {
+    setLanguage(newLanguage as 'en' | 'te' | 'hi');
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-red-50 to-green-50">
@@ -27,24 +34,43 @@ const Index = () => {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-6">
               <div className="w-20 h-20 bg-yellow-400 rounded-full flex items-center justify-center shadow-lg border-4 border-white">
-                <MapPin className="w-10 h-10 text-red-600" />
+                <img 
+                  src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Seal_of_Telangana.svg/150px-Seal_of_Telangana.svg.png" 
+                  alt="Telangana Logo"
+                  className="w-12 h-12 object-contain"
+                  onError={(e) => {
+                    e.currentTarget.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='%23dc2626' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'/%3E%3Ccircle cx='12' cy='10' r='3'/%3E%3C/svg%3E";
+                  }}
+                />
               </div>
               <div>
                 <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-yellow-200 to-white bg-clip-text text-transparent animate-pulse">
-                  तेलंगाना कनेक्ट
+                  {t('title')}
                 </h1>
-                <p className="text-xl text-yellow-100 font-semibold">Telangana Connect - तेलंगाना कनेक्ट - తెలంగాణ కనెక్ట్</p>
+                <p className="text-xl text-yellow-100 font-semibold">{t('subtitle')}</p>
                 <p className="text-yellow-200">जनता की आवाज़ • ప్రజల స్వరం • Voice of the People</p>
               </div>
             </div>
             <div className="hidden md:flex items-center gap-4">
+              {/* Language Selector */}
+              <Select value={language} onValueChange={handleLanguageChange}>
+                <SelectTrigger className="w-32 bg-white text-red-600 border-2 border-white">
+                  <Globe className="w-4 h-4 mr-2" />
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-white">
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="te">తెలుగు</SelectItem>
+                  <SelectItem value="hi">हिंदी</SelectItem>
+                </SelectContent>
+              </Select>
               <Button 
                 onClick={() => navigate('/login')}
                 variant="outline" 
                 className="bg-white text-red-600 border-2 border-white hover:bg-red-50 font-semibold px-6 py-3"
               >
                 <Shield className="w-5 h-5 mr-2" />
-                Officer Login
+                {t('officerLogin')}
               </Button>
             </div>
           </div>
@@ -52,21 +78,32 @@ const Index = () => {
           {/* Motivational Banner */}
           <div className="bg-gradient-to-r from-yellow-400 to-orange-400 text-red-800 p-4 rounded-lg shadow-lg border-2 border-yellow-300">
             <p className="text-center font-bold text-lg">
-              "जनता का कल्याण हमारा लक्ष्य" | "ప్రజా కల్याణమే మా లక్ష్యం" | "Public Welfare is Our Goal"
+              "जनता का कल्याण हमारा लक्ष्य" | "ప్రజా కల్యాణమే మా లక్ష్యం" | "Public Welfare is Our Goal"
             </p>
           </div>
         </div>
       </header>
 
-      {/* Mobile Officer Login Button */}
-      <div className="md:hidden bg-red-600 px-4 py-2">
+      {/* Mobile Language and Officer Login */}
+      <div className="md:hidden bg-red-600 px-4 py-2 flex justify-between items-center">
+        <Select value={language} onValueChange={handleLanguageChange}>
+          <SelectTrigger className="w-32 bg-white text-red-600">
+            <Globe className="w-4 h-4 mr-2" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-white">
+            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="te">తెలుగు</SelectItem>
+            <SelectItem value="hi">हिंदी</SelectItem>
+          </SelectContent>
+        </Select>
         <Button 
           onClick={() => navigate('/login')}
           variant="outline" 
-          className="w-full bg-white text-red-600 border-2 border-white hover:bg-red-50 font-semibold"
+          className="bg-white text-red-600 border-2 border-white hover:bg-red-50 font-semibold"
         >
           <Shield className="w-5 h-5 mr-2" />
-          Officer Login
+          {t('officerLogin')}
         </Button>
       </div>
 
@@ -79,13 +116,13 @@ const Index = () => {
               <div className="w-16 h-16 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <AlertTriangle className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Report Issue</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{t('reportIssue')}</h3>
               <p className="text-gray-600 mb-4">समस्या रिपोर्ट करें | సమస్యను నివేదించండి</p>
               <Button 
                 onClick={() => navigate('/report-issue')}
                 className="w-full bg-red-500 hover:bg-red-600"
               >
-                Submit Report
+                {t('submitReport')}
               </Button>
             </CardContent>
           </Card>
@@ -95,13 +132,13 @@ const Index = () => {
               <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Search className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Track Progress</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{t('trackProgress')}</h3>
               <p className="text-gray-600 mb-4">प्रगति ट्रैक करें | పురోగతిని ట్రాక్ చేయండి</p>
               <Button 
                 onClick={() => navigate('/track-progress')}
                 className="w-full bg-blue-500 hover:bg-blue-600"
               >
-                Track Status
+                {t('trackStatus')}
               </Button>
             </CardContent>
           </Card>
@@ -111,13 +148,13 @@ const Index = () => {
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <Award className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Schemes</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{t('schemes')}</h3>
               <p className="text-gray-600 mb-4">योजनाएं | పథకాలు</p>
               <Button 
                 onClick={() => navigate('/schemes')}
                 className="w-full bg-green-500 hover:bg-green-600"
               >
-                View Schemes
+                {t('viewSchemes')}
               </Button>
             </CardContent>
           </Card>
@@ -127,13 +164,13 @@ const Index = () => {
               <div className="w-16 h-16 bg-purple-500 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                 <ArrowUp className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">Escalate</h3>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">{t('escalate')}</h3>
               <p className="text-gray-600 mb-4">एस्केलेट करें | ఎస్కలేట్ చేయండి</p>
               <Button 
                 onClick={() => navigate('/escalate')}
                 className="w-full bg-purple-500 hover:bg-purple-600"
               >
-                Escalate Issue
+                {t('escalateIssue')}
               </Button>
             </CardContent>
           </Card>

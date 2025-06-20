@@ -4,14 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, AlertTriangle, CheckCircle, Clock, FileText, LogOut } from "lucide-react";
+import { MapPin, AlertTriangle, CheckCircle, Clock, FileText, LogOut, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import ComplaintDetailsModal from "@/components/ComplaintDetailsModal";
 
 const OfficerDashboard = () => {
   const [officerData, setOfficerData] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [complaints, setComplaints] = useState<any[]>([]);
+  const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const stored = localStorage.getItem('officerData');
@@ -31,6 +36,40 @@ const OfficerDashboard = () => {
   const handleLogout = () => {
     localStorage.removeItem('officerData');
     navigate('/');
+  };
+
+  const handleBackToHome = () => {
+    navigate('/');
+  };
+
+  const handleViewDetails = (complaint: any) => {
+    setSelectedComplaint(complaint);
+    setIsModalOpen(true);
+  };
+
+  const handleStatusUpdate = (complaintId: string, newStatus: string) => {
+    const updatedComplaints = complaints.map(complaint => 
+      complaint.id === complaintId 
+        ? { ...complaint, status: newStatus }
+        : complaint
+    );
+    
+    setComplaints(updatedComplaints);
+    localStorage.setItem('officerComplaints', JSON.stringify(updatedComplaints));
+    
+    // Also update user reports
+    const userReports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    const updatedUserReports = userReports.map((report: any) => 
+      report.id === complaintId 
+        ? { ...report, status: newStatus }
+        : report
+    );
+    localStorage.setItem('userReports', JSON.stringify(updatedUserReports));
+    
+    toast({
+      title: "Status Updated",
+      description: `Complaint ${complaintId} status changed to ${newStatus}`,
+    });
   };
 
   const districts = [
@@ -64,12 +103,20 @@ const OfficerDashboard = () => {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
+              <Button 
+                onClick={handleBackToHome}
+                variant="outline" 
+                className="text-red-600 border-white hover:bg-white"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Back to Home
+              </Button>
               <div className="w-12 h-12 bg-yellow-400 rounded-full flex items-center justify-center">
                 <MapPin className="w-6 h-6 text-red-600" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold">Officer Dashboard</h1>
-                <p className="text-yellow-100">Telangana Connect - Government Portal</p>
+                <p className="text-yellow-100">DigiPanchayath - Government Portal</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
@@ -241,7 +288,11 @@ const OfficerDashboard = () => {
                           </Badge>
                         </td>
                         <td className="p-3">
-                          <Button size="sm" className="bg-red-500 hover:bg-red-600">
+                          <Button 
+                            size="sm" 
+                            className="bg-red-500 hover:bg-red-600"
+                            onClick={() => handleViewDetails(complaint)}
+                          >
                             View Details
                           </Button>
                         </td>
@@ -254,6 +305,14 @@ const OfficerDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Complaint Details Modal */}
+      <ComplaintDetailsModal
+        complaint={selectedComplaint}
+        open={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onStatusUpdate={handleStatusUpdate}
+      />
     </div>
   );
 };

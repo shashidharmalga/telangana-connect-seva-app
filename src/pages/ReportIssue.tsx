@@ -5,13 +5,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Camera, MapPin, Mic } from "lucide-react";
+import { Upload, Camera, MapPin, Mic, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ReportIssue = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     district: "",
     village: "",
@@ -20,6 +22,8 @@ const ReportIssue = () => {
     description: "",
     location: ""
   });
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [hasVideo, setHasVideo] = useState(false);
 
   const districts = [
     "Hyderabad", "Warangal Urban", "Warangal Rural", "Medak", "Nizamabad", "Karimnagar",
@@ -36,6 +40,24 @@ const ReportIssue = () => {
     "Irrigation Officer", "District Collector"
   ];
 
+  const handlePhotoUpload = () => {
+    // Simulate photo upload
+    setHasPhoto(true);
+    toast({
+      title: "Photo Uploaded",
+      description: "Photo has been successfully uploaded.",
+    });
+  };
+
+  const handleVideoUpload = () => {
+    // Simulate video upload
+    setHasVideo(true);
+    toast({
+      title: "Video Uploaded",
+      description: "Video has been successfully uploaded.",
+    });
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -43,6 +65,15 @@ const ReportIssue = () => {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!hasPhoto || !hasVideo) {
+      toast({
+        title: "Missing Media Files",
+        description: "Photo and video uploads are mandatory for reporting issues.",
         variant: "destructive"
       });
       return;
@@ -57,7 +88,9 @@ const ReportIssue = () => {
       ...formData,
       status: "Pending" as const,
       priority: "Medium" as const,
-      submittedDate: new Date().toLocaleDateString('en-IN')
+      submittedDate: new Date().toLocaleDateString('en-IN'),
+      hasPhoto,
+      hasVideo
     };
 
     // Save to user reports
@@ -86,6 +119,8 @@ const ReportIssue = () => {
       description: "",
       location: ""
     });
+    setHasPhoto(false);
+    setHasVideo(false);
 
     // Navigate to My Reports after a short delay
     setTimeout(() => {
@@ -102,9 +137,10 @@ const ReportIssue = () => {
             onClick={() => navigate('/')}
             className="mb-4"
           >
-            ← Back to Home
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t('backToHome')}
           </Button>
-          <h1 className="text-3xl font-bold text-gray-800">Report an Issue</h1>
+          <h1 className="text-3xl font-bold text-gray-800">{t('reportIssue')}</h1>
           <p className="text-gray-600">समस्या रिपोर्ट करें | సమస్యను నివేదించండి</p>
         </div>
       </header>
@@ -213,23 +249,32 @@ const ReportIssue = () => {
                   </div>
                 </div>
 
-                {/* File Upload Section */}
+                {/* File Upload Section - Made Mandatory */}
                 <div className="space-y-4">
-                  <Label>Evidence / प्रमाण / సాక్ష్యం</Label>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <Button type="button" variant="outline" className="h-24 flex-col">
+                  <Label>Evidence / प्रमाण / సాక్ష్యం *</Label>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <Button 
+                      type="button" 
+                      variant={hasPhoto ? "default" : "outline"} 
+                      className={`h-24 flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                      onClick={handlePhotoUpload}
+                    >
                       <Camera className="w-6 h-6 mb-2" />
-                      <span className="text-sm">Photo</span>
+                      <span className="text-sm">{hasPhoto ? 'Photo Uploaded ✓' : 'Upload Photo *'}</span>
                     </Button>
-                    <Button type="button" variant="outline" className="h-24 flex-col">
+                    <Button 
+                      type="button" 
+                      variant={hasVideo ? "default" : "outline"} 
+                      className={`h-24 flex-col ${hasVideo ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                      onClick={handleVideoUpload}
+                    >
                       <Upload className="w-6 h-6 mb-2" />
-                      <span className="text-sm">Video</span>
-                    </Button>
-                    <Button type="button" variant="outline" className="h-24 flex-col">
-                      <Mic className="w-6 h-6 mb-2" />
-                      <span className="text-sm">Voice Note</span>
+                      <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video *'}</span>
                     </Button>
                   </div>
+                  <p className="text-sm text-red-600 font-medium">
+                    * Photo and video uploads are mandatory for complaint submission
+                  </p>
                   <p className="text-sm text-gray-600">
                     Maximum file size: 5MB | अधिकतम फ़ाइल का आकार: 5MB | గరిష్ట ఫైల్ పరిమాణం: 5MB
                   </p>
@@ -238,8 +283,9 @@ const ReportIssue = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg"
+                  disabled={!hasPhoto || !hasVideo}
                 >
-                  Submit Report / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
+                  {t('submitReport')} / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
                 </Button>
               </form>
             </CardContent>
