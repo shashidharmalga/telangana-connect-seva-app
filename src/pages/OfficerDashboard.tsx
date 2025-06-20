@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,10 +12,23 @@ const OfficerDashboard = () => {
   const [officerData, setOfficerData] = useState<any>(null);
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [complaints, setComplaints] = useState<any[]>([]);
+  const [filteredComplaints, setFilteredComplaints] = useState<any[]>([]);
   const [selectedComplaint, setSelectedComplaint] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Department to issue type mapping
+  const departmentIssueMapping: { [key: string]: string[] } = {
+    "District Panchayath Officer": ["Water Supply", "Sanitation", "Road Maintenance", "Street Lighting"],
+    "MRO (Mandal Revenue Officer)": ["Land Records", "Revenue Issues", "Property Documentation"],
+    "Irrigation Officer": ["Water Supply", "Irrigation", "Drainage"],
+    "Tahsildar": ["Land Records", "Revenue Issues", "Property Documentation", "Administrative Issues"],
+    "District Revenue Officer": ["Land Records", "Revenue Issues", "Property Documentation"],
+    "DEO (District Education Officer)": ["Education", "School Infrastructure"],
+    "Additional Collector": ["Administrative Issues", "Revenue Issues", "Land Records"],
+    "District Collector": ["Administrative Issues", "Revenue Issues", "Land Records", "Emergency Services"]
+  };
 
   useEffect(() => {
     const stored = localStorage.getItem('officerData');
@@ -26,12 +38,28 @@ const OfficerDashboard = () => {
       navigate('/login');
     }
 
-    // Load complaints from localStorage
+    // Load all complaints from localStorage
     const storedComplaints = localStorage.getItem('officerComplaints');
     if (storedComplaints) {
       setComplaints(JSON.parse(storedComplaints));
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (officerData && complaints.length > 0) {
+      // Filter complaints based on officer's department
+      const relevantIssueTypes = departmentIssueMapping[officerData.govField] || [];
+      const filtered = complaints.filter(complaint => 
+        relevantIssueTypes.includes(complaint.issueType)
+      );
+      setFilteredComplaints(filtered);
+      console.log('Officer Department:', officerData.govField);
+      console.log('Relevant Issue Types:', relevantIssueTypes);
+      console.log('Filtered Complaints:', filtered);
+    } else {
+      setFilteredComplaints([]);
+    }
+  }, [officerData, complaints]);
 
   const handleLogout = () => {
     localStorage.removeItem('officerData');
@@ -77,15 +105,15 @@ const OfficerDashboard = () => {
     "Khammam", "Nalgonda", "Mahbubnagar", "Rangareddy", "Adilabad", "Mancherial"
   ];
 
-  // Calculate stats from actual complaints
-  const totalComplaints = complaints.length;
-  const pendingComplaints = complaints.filter(c => c.status === "Pending").length;
-  const inProgressComplaints = complaints.filter(c => c.status === "In Progress").length;
-  const completedComplaints = complaints.filter(c => c.status === "Completed").length;
+  // Calculate stats from filtered complaints
+  const totalComplaints = filteredComplaints.length;
+  const pendingComplaints = filteredComplaints.filter(c => c.status === "Pending").length;
+  const inProgressComplaints = filteredComplaints.filter(c => c.status === "In Progress").length;
+  const completedComplaints = filteredComplaints.filter(c => c.status === "Completed").length;
 
-  // Generate heat map data from actual complaints
+  // Generate heat map data from filtered complaints
   const heatMapData = districts.map(district => {
-    const districtComplaints = complaints.filter(c => c.district === district);
+    const districtComplaints = filteredComplaints.filter(c => c.district === district);
     const resolved = districtComplaints.filter(c => c.status === "Completed").length;
     return {
       district,
@@ -104,7 +132,7 @@ const OfficerDashboard = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Button 
-                onClick={handleBackToHome}
+                onClick={() => navigate('/')}
                 variant="outline" 
                 className="text-red-600 border-white hover:bg-white"
               >
@@ -124,7 +152,10 @@ const OfficerDashboard = () => {
                 <p className="font-semibold">{officerData.govField}</p>
                 <p className="text-sm text-yellow-100">ID: {officerData.employeeId}</p>
               </div>
-              <Button onClick={handleLogout} variant="outline" className="text-red-600 border-white hover:bg-white">
+              <Button onClick={() => {
+                localStorage.removeItem('officerData');
+                navigate('/');
+              }} variant="outline" className="text-red-600 border-white hover:bg-white">
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
               </Button>
@@ -134,6 +165,23 @@ const OfficerDashboard = () => {
       </header>
 
       <div className="container mx-auto px-4 py-8">
+        {/* Department Info Card */}
+        <Card className="mb-8 border-l-4 border-blue-500">
+          <CardContent className="p-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                <FileText className="w-6 h-6 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-gray-800">Department: {officerData.govField}</h3>
+                <p className="text-gray-600">
+                  Handling: {departmentIssueMapping[officerData.govField]?.join(", ") || "All Issues"}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Statistics Cards */}
         <div className="grid md:grid-cols-4 gap-6 mb-8">
           <Card className="border-l-4 border-red-500">
@@ -189,7 +237,7 @@ const OfficerDashboard = () => {
         {heatMapData.length > 0 && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle className="text-xl text-gray-800">District-wise Complaint Heat Map</CardTitle>
+              <CardTitle className="text-xl text-gray-800">District-wise Complaint Heat Map (Your Department)</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -223,7 +271,7 @@ const OfficerDashboard = () => {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-xl text-gray-800">Recent Complaints</CardTitle>
+              <CardTitle className="text-xl text-gray-800">Your Department Complaints</CardTitle>
               <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
                 <SelectTrigger className="w-48">
                   <SelectValue placeholder="Filter by District" />
@@ -240,10 +288,10 @@ const OfficerDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            {complaints.length === 0 ? (
+            {filteredComplaints.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No complaints submitted yet.</p>
+                <p className="text-gray-600">No complaints for your department yet.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -260,7 +308,7 @@ const OfficerDashboard = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {complaints
+                    {filteredComplaints
                       .filter(complaint => selectedDistrict === "all" || complaint.district === selectedDistrict)
                       .map((complaint) => (
                       <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50">
@@ -291,7 +339,10 @@ const OfficerDashboard = () => {
                           <Button 
                             size="sm" 
                             className="bg-red-500 hover:bg-red-600"
-                            onClick={() => handleViewDetails(complaint)}
+                            onClick={() => {
+                              setSelectedComplaint(complaint);
+                              setIsModalOpen(true);
+                            }}
                           >
                             View Details
                           </Button>
