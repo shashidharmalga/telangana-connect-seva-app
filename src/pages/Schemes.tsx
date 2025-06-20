@@ -6,83 +6,203 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, ExternalLink, FileText, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import SchemeDetailsModal from "@/components/SchemeDetailsModal";
 
 const Schemes = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedScheme, setSelectedScheme] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const schemes = [
     {
       id: 1,
       name: "Rythu Bandhu",
       description: "Investment support scheme for farmers providing Rs. 10,000 per acre per season.",
-      eligibility: "All farmers owning agricultural land",
+      detailedDescription: "Rythu Bandhu is a flagship welfare scheme of Telangana government providing investment support to farmers. Under this scheme, Rs. 5,000 per acre is provided for both Kharif and Rabi seasons, totaling Rs. 10,000 per acre per year. This financial assistance helps farmers purchase seeds, fertilizers, pesticides, and other agricultural inputs without depending on moneylenders.",
+      eligibility: "All farmers owning agricultural land in Telangana",
       category: "Agriculture",
       status: "Active",
       image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=200&fit=crop",
       officialUrl: "https://agriculture.telangana.gov.in/rythu-bandhu/",
       officer: "Agriculture Officer",
-      color: "green"
+      color: "green",
+      benefits: [
+        "Rs. 5,000 per acre for Kharif season",
+        "Rs. 5,000 per acre for Rabi season", 
+        "Direct bank transfer to farmer's account",
+        "No middleman involvement"
+      ],
+      documents: [
+        "Aadhaar Card",
+        "Land ownership documents",
+        "Bank account details",
+        "Farmer registration certificate"
+      ],
+      applicationProcess: [
+        "Visit village revenue officer",
+        "Submit required documents",
+        "Land verification by officials",
+        "Amount credited to bank account"
+      ]
     },
     {
       id: 2,
       name: "Dalit Bandhu",
       description: "Financial assistance of Rs. 10 lakh to each Dalit family for business or employment.",
-      eligibility: "Scheduled Caste families",
+      detailedDescription: "Dalit Bandhu is a pioneering scheme providing Rs. 10 lakh financial assistance to each Scheduled Caste family without any conditions or bank guarantees. This scheme aims to empower Dalit families economically and socially by providing them with capital to start businesses, acquire skills, or invest in income-generating activities.",
+      eligibility: "Scheduled Caste families with family income below Rs. 3 lakh per annum",
       category: "Social Welfare",
       status: "Active",
       image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=200&fit=crop",
       officialUrl: "https://dalitbandhu.telangana.gov.in/",
       officer: "Social Welfare Officer",
-      color: "blue"
+      color: "blue",
+      benefits: [
+        "Rs. 10 lakh financial assistance",
+        "No bank guarantee required",
+        "No conditions attached",
+        "Direct benefit transfer"
+      ],
+      documents: [
+        "Caste certificate (SC)",
+        "Aadhaar Card",
+        "Income certificate",
+        "Bank account details",
+        "Residence certificate"
+      ],
+      applicationProcess: [
+        "Apply through designated officers",
+        "Document verification",
+        "Family survey and verification",
+        "Amount transfer to beneficiary account"
+      ]
     },
     {
       id: 3,
       name: "Aasara Pension",
       description: "Monthly pension for elderly, widows, and disabled persons.",
-      eligibility: "Age 65+ for elderly, widows, disabled persons",
+      detailedDescription: "Aasara Pension scheme provides monthly financial assistance to elderly citizens, widows, disabled persons, and other vulnerable sections of society. The pension amount varies based on the category and age of the beneficiary, ensuring social security and dignity for the most vulnerable populations.",
+      eligibility: "Age 65+ for elderly, widows of any age, disabled persons with 40% disability",
       category: "Social Security",
       status: "Active",
       image: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=400&h=200&fit=crop",
       officialUrl: "https://pensioner.telangana.gov.in/",
       officer: "Pension Officer",
-      color: "purple"
+      color: "purple",
+      benefits: [
+        "Rs. 2,016 per month for elderly",
+        "Rs. 1,500 per month for widows",
+        "Rs. 3,016 for disabled persons",
+        "Automatic bank transfer"
+      ],
+      documents: [
+        "Age proof certificate",
+        "Income certificate",
+        "Bank account details",
+        "Disability certificate (for disabled)",
+        "Spouse death certificate (for widows)"
+      ],
+      applicationProcess: [
+        "Submit application to VRO",
+        "Medical examination (if required)",
+        "Document verification",
+        "Pension activation and monthly transfer"
+      ]
     },
     {
       id: 4,
       name: "Mission Bhagiratha",
       description: "Safe drinking water supply to every household in rural and urban areas.",
-      eligibility: "All households in Telangana",
+      detailedDescription: "Mission Bhagiratha is the largest drinking water project in India, aimed at providing safe and adequate drinking water to every household in Telangana. The project involves setting up water treatment plants, laying pipeline networks, and ensuring 24x7 water supply to all villages and urban areas.",
+      eligibility: "All households in Telangana state",
       category: "Water Supply",
       status: "Ongoing",
       image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=200&fit=crop",
       officialUrl: "https://missionbhagiratha.telangana.gov.in/",
       officer: "Water Supply Officer",
-      color: "cyan"
+      color: "cyan",
+      benefits: [
+        "24x7 water supply to every household",
+        "Safe and treated drinking water",
+        "Household tap connections",
+        "No water scarcity issues"
+      ],
+      documents: [
+        "Residence proof",
+        "Aadhaar Card",
+        "Property documents",
+        "Connection application form"
+      ],
+      applicationProcess: [
+        "Apply for household connection",
+        "Survey by technical team",
+        "Pipeline laying and meter installation",
+        "Activation of water supply"
+      ]
     },
     {
       id: 5,
       name: "MCH Kit",
       description: "Essential items for newborn babies and mothers.",
-      eligibility: "All pregnant women in government hospitals",
+      detailedDescription: "MCH (Mother and Child Health) Kit is provided to pregnant women delivering in government hospitals. The kit contains essential items for both mother and newborn baby including clothes, diapers, soaps, oils, and other hygiene products to ensure proper care during the initial days after delivery.",
+      eligibility: "All pregnant women delivering in government hospitals",
       category: "Healthcare",
       status: "Active",
       image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=200&fit=crop",
       officialUrl: "https://health.telangana.gov.in/mch-kit/",
       officer: "Health Officer",
-      color: "pink"
+      color: "pink",
+      benefits: [
+        "Free kit worth Rs. 12,000",
+        "Essential baby care items",
+        "Mother care products",
+        "Quality assurance of all items"
+      ],
+      documents: [
+        "Pregnancy registration card",
+        "Aadhaar Card",
+        "Hospital admission records",
+        "Delivery certificate"
+      ],
+      applicationProcess: [
+        "Register pregnancy at government hospital",
+        "Regular checkups and consultation",
+        "Kit provided at time of delivery",
+        "No separate application required"
+      ]
     },
     {
       id: 6,
       name: "Kalyana Lakshmi",
       description: "Financial assistance for marriages of SC, ST, BC, and minority girls.",
-      eligibility: "Girls from SC/ST/BC/Minority families",
+      detailedDescription: "Kalyana Lakshmi scheme provides financial assistance for marriages of girls belonging to SC, ST, BC, and minority communities. The scheme aims to reduce the financial burden on families during marriages and ensure that girls from economically weaker sections can have dignified weddings.",
+      eligibility: "Girls from SC/ST/BC/Minority families with family income below Rs. 2 lakh per annum",
       category: "Social Welfare",
       status: "Active",
       image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=400&h=200&fit=crop",
       officialUrl: "https://kalyanalakshmi.telangana.gov.in/",
       officer: "Social Welfare Officer",
-      color: "rose"
+      color: "rose",
+      benefits: [
+        "Rs. 1,16,116 financial assistance",
+        "One-time payment before marriage",
+        "No loan or repayment required",
+        "Direct bank transfer"
+      ],
+      documents: [
+        "Caste certificate",
+        "Income certificate",
+        "Age proof of bride",
+        "Marriage invitation card",
+        "Bank account details"
+      ],
+      applicationProcess: [
+        "Apply 30 days before marriage",
+        "Submit documents to MRO office",
+        "Verification by concerned officials",
+        "Amount transferred before marriage date"
+      ]
     }
   ];
 
@@ -147,6 +267,11 @@ const Schemes = () => {
         category: 'Scheme Non-Delivery'
       }
     });
+  };
+
+  const handleShowDetails = (scheme: any) => {
+    setSelectedScheme(scheme);
+    setIsModalOpen(true);
   };
 
   return (
@@ -223,7 +348,12 @@ const Schemes = () => {
                       <ExternalLink className="w-4 h-4 mr-1" />
                       Apply Now
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1">
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => handleShowDetails(scheme)}
+                    >
                       <FileText className="w-4 h-4 mr-1" />
                       Details
                     </Button>
@@ -272,6 +402,12 @@ const Schemes = () => {
           </div>
         </div>
       </div>
+
+      <SchemeDetailsModal 
+        scheme={selectedScheme}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </div>
   );
 };

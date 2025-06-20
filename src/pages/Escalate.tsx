@@ -1,20 +1,25 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Upload, ArrowLeft } from "lucide-react";
+import { AlertTriangle, Upload, ArrowLeft, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const Escalate = () => {
   const [complaintId, setComplaintId] = useState("");
   const [escalateReason, setEscalateReason] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [escalateTo, setEscalateTo] = useState("");
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const escalationLevels = [
     "District Collector",
@@ -32,10 +37,39 @@ const Escalate = () => {
     "Issue worsening"
   ];
 
+  const handlePhotoCapture = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = "image/*";
+      fileInputRef.current.capture = "environment";
+      fileInputRef.current.click();
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCapturedPhoto(result);
+        setHasPhoto(true);
+        toast({
+          title: "Photo Captured",
+          description: "Photo has been successfully captured and uploaded.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Handle escalation submission
     console.log("Escalation submitted");
+    toast({
+      title: "Escalation Submitted",
+      description: "Your escalation has been submitted successfully.",
+    });
   };
 
   return (
@@ -140,29 +174,47 @@ const Escalate = () => {
                 <Label className="text-gray-700 font-semibold">
                   Supporting Evidence
                 </Label>
-                <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center">
-                  <Upload className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                  <p className="text-gray-600 mb-2">Upload supporting documents</p>
-                  <p className="text-sm text-gray-500">Photos, videos, or documents (Max 5MB each)</p>
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    className="mt-4 border-purple-500 text-purple-600 hover:bg-purple-50"
-                  >
-                    Choose Files
-                  </Button>
-                </div>
-              </div>
-
-              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4">
-                <div className="flex">
-                  <AlertTriangle className="w-5 h-5 text-yellow-400 mr-3 mt-0.5" />
-                  <div>
-                    <h4 className="text-sm font-semibold text-yellow-800">Important Notice</h4>
-                    <p className="text-sm text-yellow-700 mt-1">
-                      Escalations are reviewed by senior officials. Please ensure all information is accurate 
-                      and you have given adequate time for initial resolution.
-                    </p>
+                <div className="space-y-4">
+                  <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center">
+                    <Button 
+                      type="button" 
+                      variant={hasPhoto ? "default" : "outline"} 
+                      className={`h-24 w-full flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                      onClick={handlePhotoCapture}
+                    >
+                      <Camera className="w-8 h-8 mb-2" />
+                      <span>{hasPhoto ? 'Photo Captured ✓' : 'Take Photo'}</span>
+                    </Button>
+                    {capturedPhoto && (
+                      <div className="mt-4">
+                        <img 
+                          src={capturedPhoto} 
+                          alt="Captured evidence" 
+                          className="w-full max-w-md mx-auto h-48 object-cover rounded-md border"
+                        />
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </div>
+                  
+                  <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center">
+                    <Upload className="w-12 h-12 text-purple-400 mx-auto mb-4" />
+                    <p className="text-gray-600 mb-2">Upload additional documents</p>
+                    <p className="text-sm text-gray-500">Photos, videos, or documents (Max 5MB each)</p>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="mt-4 border-purple-500 text-purple-600 hover:bg-purple-50"
+                    >
+                      Choose Files
+                    </Button>
                   </div>
                 </div>
               </div>
