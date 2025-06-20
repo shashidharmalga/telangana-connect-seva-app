@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 
 const OfficerDashboard = () => {
   const [officerData, setOfficerData] = useState<any>(null);
-  const [selectedDistrict, setSelectedDistrict] = useState("");
+  const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [complaints, setComplaints] = useState<any[]>([]);
   const navigate = useNavigate();
 
@@ -182,7 +182,7 @@ const OfficerDashboard = () => {
                   <SelectValue placeholder="Filter by District" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Districts</SelectItem>
+                  <SelectItem value="all">All Districts</SelectItem>
                   {districts.map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
@@ -214,7 +214,7 @@ const OfficerDashboard = () => {
                   </thead>
                   <tbody>
                     {complaints
-                      .filter(complaint => !selectedDistrict || complaint.district === selectedDistrict)
+                      .filter(complaint => selectedDistrict === "all" || complaint.district === selectedDistrict)
                       .map((complaint) => (
                       <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="p-3 font-medium text-blue-600">{complaint.id}</td>
