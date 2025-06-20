@@ -55,34 +55,62 @@ const Index = () => {
         <div className="absolute top-40 left-1/2 w-80 h-80 bg-gradient-to-br from-green-400 to-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-pulse" style={{animationDelay: '4s'}}></div>
       </div>
 
-      {/* Header */}
-      <header className="bg-white/80 backdrop-blur-md shadow-lg border-b border-white/20 relative z-10">
+      {/* Enhanced Header */}
+      <header className="bg-gradient-to-r from-white/95 via-blue-50/95 to-purple-50/95 backdrop-blur-lg shadow-2xl border-b border-gradient-to-r from-blue-200/50 to-purple-200/50 relative z-10 sticky top-0">
+        {/* Decorative top border */}
+        <div className="h-1 bg-gradient-to-r from-blue-500 via-purple-500 via-pink-500 to-orange-500"></div>
+        
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="flex justify-between items-center">
-            <div className="flex items-center space-x-3 animate-slide-in-right">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-110 transition-all duration-300">
-                <Building className="w-7 h-7 text-white" />
+            {/* Enhanced Logo Section */}
+            <div className="flex items-center space-x-4 animate-slide-in-right group">
+              <div className="relative">
+                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-500 group-hover:shadow-blue-500/25">
+                  <Building className="w-8 h-8 text-white drop-shadow-lg" />
+                </div>
+                {/* Floating decorative elements */}
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full opacity-75 animate-pulse"></div>
+                <div className="absolute -bottom-1 -left-1 w-3 h-3 bg-gradient-to-br from-green-400 to-blue-400 rounded-full opacity-75 animate-pulse" style={{animationDelay: '1s'}}></div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="group-hover:translate-x-1 transition-transform duration-300">
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent drop-shadow-sm">
                   {t("title")}
                 </h1>
-                <p className="text-sm text-gray-600">{t("subtitle")}</p>
+                <p className="text-sm text-gray-600 font-medium">{t("subtitle")}</p>
               </div>
             </div>
-            <div className="flex items-center gap-4 animate-fade-in">
-              <LanguageToggle />
+
+            {/* Enhanced Right Section */}
+            <div className="flex items-center gap-6 animate-fade-in">
+              {/* Language Toggle with enhanced styling */}
+              <div className="transform hover:scale-105 transition-all duration-300">
+                <LanguageToggle />
+              </div>
+              
+              {/* Enhanced Officer Login Button */}
               <Button 
                 variant="outline" 
                 onClick={() => navigate("/login")}
-                className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-none hover:from-indigo-600 hover:to-purple-700 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                className="group relative overflow-hidden bg-gradient-to-r from-indigo-500 via-purple-600 to-pink-600 text-white border-none hover:from-indigo-600 hover:via-purple-700 hover:to-pink-700 transform hover:scale-105 hover:-translate-y-1 transition-all duration-300 shadow-xl hover:shadow-2xl px-6 py-3 rounded-xl font-semibold"
               >
-                <User className="w-4 h-4" />
-                {t("officerLogin")}
+                {/* Animated background overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></div>
+                
+                <div className="relative flex items-center gap-2">
+                  <User className="w-4 h-4 group-hover:rotate-12 transition-transform duration-300" />
+                  <span>{t("officerLogin")}</span>
+                </div>
+                
+                {/* Floating particles effect */}
+                <div className="absolute -top-1 -right-1 w-2 h-2 bg-yellow-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping"></div>
+                <div className="absolute -bottom-1 -left-1 w-1.5 h-1.5 bg-blue-300 rounded-full opacity-0 group-hover:opacity-100 group-hover:animate-ping" style={{animationDelay: '0.3s'}}></div>
               </Button>
             </div>
           </div>
         </div>
+        
+        {/* Bottom gradient decoration */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-purple-300 to-transparent"></div>
       </header>
 
       {/* Background Image Section */}
