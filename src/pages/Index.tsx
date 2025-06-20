@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, TrendingUp, Building, AlertTriangle, User, Phone, Sparkles, Heart } from "lucide-react";
@@ -65,8 +64,12 @@ const Index = () => {
             {/* Enhanced Logo Section */}
             <div className="flex items-center space-x-4 animate-slide-in-right group">
               <div className="relative">
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-500 group-hover:shadow-blue-500/25">
-                  <Building className="w-8 h-8 text-white drop-shadow-lg" />
+                <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-2xl transform hover:scale-110 hover:rotate-3 transition-all duration-500 group-hover:shadow-blue-500/25 p-1">
+                  <img 
+                    src="/lovable-uploads/08104989-29a7-4a34-b795-fa37509b76d0.png" 
+                    alt="Government of Telangana Logo" 
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 {/* Floating decorative elements */}
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-br from-yellow-400 to-orange-400 rounded-full opacity-75 animate-pulse"></div>
