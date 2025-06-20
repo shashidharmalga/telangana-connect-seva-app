@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,7 +52,7 @@ const ReportIssue = () => {
   ];
 
   const generateOtp = () => {
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otp = Math.floor(1000 + Math.random() * 9000).toString(); // 4-digit OTP
     setGeneratedOtp(otp);
     return otp;
   };
@@ -68,11 +69,14 @@ const ReportIssue = () => {
 
     const otp = generateOtp();
     setOtpSent(true);
-    console.log("Generated OTP:", otp); // In real app, this would be sent via SMS service
+    
+    // Show OTP in console and alert for testing
+    console.log("🔑 Your OTP is:", otp);
+    alert(`Your OTP is: ${otp}`);
     
     toast({
-      title: "OTP Sent",
-      description: `OTP has been sent to ${formData.number}. Please check your messages.`,
+      title: "OTP Generated",
+      description: `Your OTP is: ${otp}. Please enter it below to verify.`,
     });
   };
 
@@ -86,7 +90,7 @@ const ReportIssue = () => {
     } else {
       toast({
         title: "Invalid OTP",
-        description: "Please enter the correct OTP sent to your mobile number.",
+        description: "Please enter the correct OTP.",
         variant: "destructive"
       });
     }
@@ -307,7 +311,7 @@ const ReportIssue = () => {
                       <Label htmlFor="otp">Enter OTP / OTP दर्ज करें / OTP నమోదు చేయండి</Label>
                       <div className="flex items-center gap-4">
                         <InputOTP
-                          maxLength={6}
+                          maxLength={4}
                           value={otpValue}
                           onChange={(value) => setOtpValue(value)}
                         >
@@ -316,21 +320,19 @@ const ReportIssue = () => {
                             <InputOTPSlot index={1} />
                             <InputOTPSlot index={2} />
                             <InputOTPSlot index={3} />
-                            <InputOTPSlot index={4} />
-                            <InputOTPSlot index={5} />
                           </InputOTPGroup>
                         </InputOTP>
                         <Button
                           type="button"
                           onClick={handleVerifyOtp}
-                          disabled={otpValue.length !== 6}
+                          disabled={otpValue.length !== 4}
                           size="sm"
                         >
                           Verify
                         </Button>
                       </div>
-                      <p className="text-sm text-gray-600">
-                        OTP sent to {formData.number}. Please check your messages.
+                      <p className="text-sm text-blue-600 font-medium">
+                        📱 Your OTP is: {generatedOtp} (Check console/alert for testing)
                       </p>
                     </div>
                   )}
