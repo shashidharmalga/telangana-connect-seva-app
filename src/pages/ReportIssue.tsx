@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,9 @@ const ReportIssue = () => {
   });
   const [hasPhoto, setHasPhoto] = useState(false);
   const [hasVideo, setHasVideo] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const districts = [
     "Hyderabad", "Warangal Urban", "Warangal Rural", "Medak", "Nizamabad", "Karimnagar",
@@ -40,22 +43,48 @@ const ReportIssue = () => {
     "Irrigation Officer", "District Collector"
   ];
 
-  const handlePhotoUpload = () => {
-    // Simulate photo upload
-    setHasPhoto(true);
-    toast({
-      title: "Photo Uploaded",
-      description: "Photo has been successfully uploaded.",
-    });
+  const handlePhotoCapture = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.accept = "image/*";
+      fileInputRef.current.capture = "environment";
+      fileInputRef.current.click();
+    }
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const result = event.target?.result as string;
+        setCapturedPhoto(result);
+        setHasPhoto(true);
+        toast({
+          title: "Photo Captured",
+          description: "Photo has been successfully captured and uploaded.",
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleVideoUpload = () => {
-    // Simulate video upload
-    setHasVideo(true);
-    toast({
-      title: "Video Uploaded",
-      description: "Video has been successfully uploaded.",
-    });
+    if (videoInputRef.current) {
+      videoInputRef.current.accept = "video/*";
+      videoInputRef.current.capture = "environment";
+      videoInputRef.current.click();
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setHasVideo(true);
+      toast({
+        title: "Video Uploaded",
+        description: "Video has been successfully uploaded.",
+      });
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -121,6 +150,7 @@ const ReportIssue = () => {
     });
     setHasPhoto(false);
     setHasVideo(false);
+    setCapturedPhoto(null);
 
     // Navigate to My Reports after a short delay
     setTimeout(() => {
@@ -249,28 +279,58 @@ const ReportIssue = () => {
                   </div>
                 </div>
 
-                {/* File Upload Section - Made Mandatory */}
+                {/* Enhanced File Upload Section with Camera */}
                 <div className="space-y-4">
                   <Label>Evidence / प्रमाण / సాక్ష్యం *</Label>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <Button 
-                      type="button" 
-                      variant={hasPhoto ? "default" : "outline"} 
-                      className={`h-24 flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
-                      onClick={handlePhotoUpload}
-                    >
-                      <Camera className="w-6 h-6 mb-2" />
-                      <span className="text-sm">{hasPhoto ? 'Photo Uploaded ✓' : 'Upload Photo *'}</span>
-                    </Button>
-                    <Button 
-                      type="button" 
-                      variant={hasVideo ? "default" : "outline"} 
-                      className={`h-24 flex-col ${hasVideo ? 'bg-green-500 hover:bg-green-600' : ''}`}
-                      onClick={handleVideoUpload}
-                    >
-                      <Upload className="w-6 h-6 mb-2" />
-                      <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video *'}</span>
-                    </Button>
+                    <div className="space-y-2">
+                      <Button 
+                        type="button" 
+                        variant={hasPhoto ? "default" : "outline"} 
+                        className={`h-24 w-full flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                        onClick={handlePhotoCapture}
+                      >
+                        <Camera className="w-6 h-6 mb-2" />
+                        <span className="text-sm">{hasPhoto ? 'Photo Captured ✓' : 'Take Photo *'}</span>
+                      </Button>
+                      {capturedPhoto && (
+                        <div className="mt-2">
+                          <img 
+                            src={capturedPhoto} 
+                            alt="Captured" 
+                            className="w-full h-32 object-cover rounded-md border"
+                          />
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button 
+                        type="button" 
+                        variant={hasVideo ? "default" : "outline"} 
+                        className={`h-24 w-full flex-col ${hasVideo ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                        onClick={handleVideoUpload}
+                      >
+                        <Upload className="w-6 h-6 mb-2" />
+                        <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video *'}</span>
+                      </Button>
+                      <input
+                        ref={videoInputRef}
+                        type="file"
+                        accept="video/*"
+                        capture="environment"
+                        onChange={handleVideoChange}
+                        className="hidden"
+                      />
+                    </div>
                   </div>
                   <p className="text-sm text-red-600 font-medium">
                     * Photo and video uploads are mandatory for complaint submission
