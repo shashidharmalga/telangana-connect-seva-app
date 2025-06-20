@@ -99,10 +99,10 @@ const ReportIssue = () => {
       return;
     }
 
-    if (!hasPhoto || !hasVideo) {
+    if (!hasPhoto) {
       toast({
-        title: "Missing Media Files",
-        description: "Photo and video uploads are mandatory for reporting issues.",
+        title: "Missing Photo",
+        description: "Photo upload is mandatory for reporting issues.",
         variant: "destructive"
       });
       return;
@@ -281,7 +281,7 @@ const ReportIssue = () => {
 
                 {/* Enhanced File Upload Section with Camera */}
                 <div className="space-y-4">
-                  <Label>Evidence / प्रमाण / సాక్ష్యం *</Label>
+                  <Label>Evidence / प्रमाण / సాక్ష్యం</Label>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Button 
@@ -320,7 +320,7 @@ const ReportIssue = () => {
                         onClick={handleVideoUpload}
                       >
                         <Upload className="w-6 h-6 mb-2" />
-                        <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video *'}</span>
+                        <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video (Optional)'}</span>
                       </Button>
                       <input
                         ref={videoInputRef}
@@ -333,7 +333,7 @@ const ReportIssue = () => {
                     </div>
                   </div>
                   <p className="text-sm text-red-600 font-medium">
-                    * Photo and video uploads are mandatory for complaint submission
+                    * Photo upload is mandatory for complaint submission
                   </p>
                   <p className="text-sm text-gray-600">
                     Maximum file size: 5MB | अधिकतम फ़ाइल का आकार: 5MB | గరిష్ట ఫైల్ పరిమాణం: 5MB
@@ -343,7 +343,7 @@ const ReportIssue = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg"
-                  disabled={!hasPhoto || !hasVideo}
+                  disabled={!hasPhoto}
                 >
                   {t('submitReport')} / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
                 </Button>
