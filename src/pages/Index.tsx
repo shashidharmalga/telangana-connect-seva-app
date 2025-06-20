@@ -1,9 +1,8 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MapPin, FileText, TrendingUp, Users, MessageCircle, AlertTriangle } from "lucide-react";
+import { MapPin, FileText, TrendingUp, Users, MessageCircle, AlertTriangle, Shield } from "lucide-react";
 import { LanguageToggle } from "@/components/LanguageToggle";
 import { DistrictMap } from "@/components/DistrictMap";
 import { useNavigate } from "react-router-dom";
@@ -30,14 +29,28 @@ const Index = () => {
   ];
 
   const officers = [
-    "Village Panchayat Secretary", "Mandal Officer", "PWD Officer", 
-    "Irrigation Officer", "District Collector"
+    "Village Panchayat Secretary", "District Panchayath Officer", "MRO (Mandal Revenue Officer)",
+    "Irrigation Officer", "Tahsildar", "District Revenue Officer", "DEO (District Education Officer)",
+    "Additional Collector", "District Collector"
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-green-50 relative overflow-hidden">
+      {/* Telangana Government Background */}
+      <div className="absolute inset-0 opacity-5">
+        <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAwIiBoZWlnaHQ9IjIwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZGVmcz48cGF0dGVybiBpZD0iYSIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgd2lkdGg9IjQwIiBoZWlnaHQ9IjQwIiBwYXR0ZXJuVHJhbnNmb3JtPSJyb3RhdGUoNDUpIj48cmVjdCB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIGZpbGw9Im5vbmUiLz48cGF0aCBkPSJNMjAgMjBMMjAgMEwwIDIweiIgZmlsbD0iIzAwMCIgZmlsbC1vcGFjaXR5PSIwLjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjYSkiLz48L3N2Zz4=')] repeat"></div>
+      </div>
+
+      {/* Government Seals */}
+      <div className="absolute top-10 right-10 w-16 h-16 bg-white rounded-full shadow-lg flex items-center justify-center opacity-10">
+        <Shield className="w-10 h-10 text-red-600" />
+      </div>
+      <div className="absolute bottom-10 left-10 w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center opacity-10">
+        <MapPin className="w-12 h-12 text-orange-600" />
+      </div>
+
       {/* Header */}
-      <header className="bg-white shadow-sm border-b-4 border-red-500">
+      <header className="bg-white shadow-sm border-b-4 border-red-500 relative z-10">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -49,13 +62,22 @@ const Index = () => {
                 <p className="text-sm text-gray-600">తెలంగాణ కనెక్ట్ | तेलंगाना कनेक्ट</p>
               </div>
             </div>
-            <LanguageToggle />
+            <div className="flex items-center gap-4">
+              <Button 
+                onClick={() => navigate('/login')} 
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                <Shield className="w-4 h-4 mr-2" />
+                Officer Login
+              </Button>
+              <LanguageToggle />
+            </div>
           </div>
         </div>
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-12 overflow-hidden">
+      <section className="relative py-12 overflow-hidden z-10">
         <div className="container mx-auto px-4">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             <div className="space-y-6 animate-fade-in">
@@ -119,7 +141,7 @@ const Index = () => {
       </section>
 
       {/* Main Features */}
-      <section className="py-12 bg-white">
+      <section className="py-12 bg-white relative z-10">
         <div className="container mx-auto px-4">
           <h3 className="text-3xl font-bold text-center text-gray-800 mb-12">
             Governance Made Simple
@@ -183,6 +205,25 @@ const Index = () => {
               </CardContent>
             </Card>
 
+            <Card className="hover:shadow-lg transition-shadow duration-300 border-l-4 border-purple-500">
+              <CardHeader>
+                <AlertTriangle className="w-12 h-12 text-purple-500 mb-4" />
+                <CardTitle className="text-xl">Escalate Issues</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600 mb-4">
+                  Automatic escalation to higher authorities if issues remain unresolved after 7 days. File escalation complaints here.
+                </p>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
+                  onClick={() => navigate('/escalate')}
+                >
+                  Escalate Complaint
+                </Button>
+              </CardContent>
+            </Card>
+
             <Card className="hover:shadow-lg transition-shadow duration-300 border-l-4 border-blue-500">
               <CardHeader>
                 <MessageCircle className="w-12 h-12 text-blue-500 mb-4" />
@@ -198,25 +239,6 @@ const Index = () => {
                   onClick={() => navigate('/polls')}
                 >
                   Participate
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="hover:shadow-lg transition-shadow duration-300 border-l-4 border-purple-500">
-              <CardHeader>
-                <AlertTriangle className="w-12 h-12 text-purple-500 mb-4" />
-                <CardTitle className="text-xl">Escalate Issues</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600 mb-4">
-                  Automatic escalation to higher authorities if issues remain unresolved after 7 days.
-                </p>
-                <Button 
-                  variant="outline" 
-                  className="w-full border-purple-500 text-purple-500 hover:bg-purple-50"
-                  onClick={() => navigate('/escalate')}
-                >
-                  Learn More
                 </Button>
               </CardContent>
             </Card>
@@ -244,7 +266,7 @@ const Index = () => {
       </section>
 
       {/* About Section */}
-      <section className="py-12 bg-gradient-to-r from-red-500 to-orange-500 text-white">
+      <section className="py-12 bg-gradient-to-r from-red-500 to-orange-500 text-white relative z-10">
         <div className="container mx-auto px-4">
           <div className="max-w-4xl mx-auto text-center">
             <h3 className="text-3xl font-bold mb-6">About Telangana Connect</h3>
@@ -256,7 +278,7 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-800 text-white py-8">
+      <footer className="bg-gray-800 text-white py-8 relative z-10">
         <div className="container mx-auto px-4">
           <div className="grid md:grid-cols-3 gap-8">
             <div>
