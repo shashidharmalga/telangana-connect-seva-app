@@ -85,6 +85,26 @@ const Index = () => {
         </div>
       </header>
 
+      {/* Background Image Section */}
+      <section 
+        className="relative h-96 bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: `url('/lovable-uploads/5a1b6e94-87f6-4384-81bb-6dc37fb98003.png')`
+        }}
+      >
+        <div className="absolute inset-0 bg-black/40"></div>
+        <div className="relative z-10 h-full flex items-center justify-center">
+          <div className="text-center text-white animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 drop-shadow-lg">
+              Government of Telangana
+            </h2>
+            <p className="text-xl md:text-2xl drop-shadow-md">
+              Digital Governance for Better Tomorrow
+            </p>
+          </div>
+        </div>
+      </section>
+
       {/* Hero Section */}
       <section className="py-20 relative z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
