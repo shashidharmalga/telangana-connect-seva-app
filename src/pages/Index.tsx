@@ -208,6 +208,31 @@ const Index = () => {
         </Button>
       </div>
 
+      {/* Telangana Secretariat Image Section */}
+      <div className="relative">
+        <div className="w-full h-64 md:h-80 overflow-hidden">
+          <img 
+            src="https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&h=400&fit=crop" 
+            alt="Telangana Secretariat"
+            className="w-full h-full object-cover"
+          />
+          <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
+            <div className="text-center text-white">
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                {language === 'hi' ? 'तेलंगाना सचिवालय' : 
+                 language === 'te' ? 'తెలంగాణ సచివాలయం' : 
+                 'Telangana Secretariat'}
+              </h2>
+              <p className="text-lg md:text-xl">
+                {language === 'hi' ? 'जनता की सेवा में' : 
+                 language === 'te' ? 'ప్రజల సేవలో' : 
+                 'Serving the People'}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Main Content */}
       <div className="container mx-auto px-4 py-12">
         {/* Quick Action Cards */}

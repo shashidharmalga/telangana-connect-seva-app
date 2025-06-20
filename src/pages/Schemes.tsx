@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, ExternalLink, FileText } from "lucide-react";
+import { Search, ExternalLink, FileText, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 const Schemes = () => {
@@ -19,7 +19,10 @@ const Schemes = () => {
       eligibility: "All farmers owning agricultural land",
       category: "Agriculture",
       status: "Active",
-      image: "🌾"
+      image: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?w=400&h=200&fit=crop",
+      officialUrl: "https://agriculture.telangana.gov.in/rythu-bandhu/",
+      officer: "Agriculture Officer",
+      color: "green"
     },
     {
       id: 2,
@@ -28,7 +31,10 @@ const Schemes = () => {
       eligibility: "Scheduled Caste families",
       category: "Social Welfare",
       status: "Active",
-      image: "💼"
+      image: "https://images.unsplash.com/photo-1559526324-4b87b5e36e44?w=400&h=200&fit=crop",
+      officialUrl: "https://dalitbandhu.telangana.gov.in/",
+      officer: "Social Welfare Officer",
+      color: "blue"
     },
     {
       id: 3,
@@ -37,7 +43,10 @@ const Schemes = () => {
       eligibility: "Age 65+ for elderly, widows, disabled persons",
       category: "Social Security",
       status: "Active",
-      image: "👵"
+      image: "https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=400&h=200&fit=crop",
+      officialUrl: "https://pensioner.telangana.gov.in/",
+      officer: "Pension Officer",
+      color: "purple"
     },
     {
       id: 4,
@@ -46,16 +55,22 @@ const Schemes = () => {
       eligibility: "All households in Telangana",
       category: "Water Supply",
       status: "Ongoing",
-      image: "💧"
+      image: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=400&h=200&fit=crop",
+      officialUrl: "https://missionbhagiratha.telangana.gov.in/",
+      officer: "Water Supply Officer",
+      color: "cyan"
     },
     {
       id: 5,
-      name: "KCR Kit",
+      name: "MCH Kit",
       description: "Essential items for newborn babies and mothers.",
       eligibility: "All pregnant women in government hospitals",
       category: "Healthcare",
       status: "Active",
-      image: "👶"
+      image: "https://images.unsplash.com/photo-1618160702438-9b02ab6515c9?w=400&h=200&fit=crop",
+      officialUrl: "https://health.telangana.gov.in/mch-kit/",
+      officer: "Health Officer",
+      color: "pink"
     },
     {
       id: 6,
@@ -64,15 +79,75 @@ const Schemes = () => {
       eligibility: "Girls from SC/ST/BC/Minority families",
       category: "Social Welfare",
       status: "Active",
-      image: "💒"
+      image: "https://images.unsplash.com/photo-1606800052052-a08af7148866?w=400&h=200&fit=crop",
+      officialUrl: "https://kalyanalakshmi.telangana.gov.in/",
+      officer: "Social Welfare Officer",
+      color: "rose"
     }
   ];
+
+  const getColorClasses = (color: string) => {
+    const colorMap = {
+      green: {
+        border: "border-green-500",
+        bg: "bg-green-500",
+        hover: "hover:bg-green-600",
+        text: "text-green-600"
+      },
+      blue: {
+        border: "border-blue-500",
+        bg: "bg-blue-500",
+        hover: "hover:bg-blue-600",
+        text: "text-blue-600"
+      },
+      purple: {
+        border: "border-purple-500",
+        bg: "bg-purple-500",
+        hover: "hover:bg-purple-600",
+        text: "text-purple-600"
+      },
+      cyan: {
+        border: "border-cyan-500",
+        bg: "bg-cyan-500",
+        hover: "hover:bg-cyan-600",
+        text: "text-cyan-600"
+      },
+      pink: {
+        border: "border-pink-500",
+        bg: "bg-pink-500",
+        hover: "hover:bg-pink-600",
+        text: "text-pink-600"
+      },
+      rose: {
+        border: "border-rose-500",
+        bg: "bg-rose-500",
+        hover: "hover:bg-rose-600",
+        text: "text-rose-600"
+      }
+    };
+    return colorMap[color] || colorMap.blue;
+  };
 
   const filteredSchemes = schemes.filter(scheme =>
     scheme.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     scheme.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
     scheme.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleApplyNow = (url: string) => {
+    window.open(url, '_blank');
+  };
+
+  const handleComplaint = (scheme: any) => {
+    navigate('/report-issue', { 
+      state: { 
+        type: 'scheme',
+        schemeName: scheme.name,
+        officer: scheme.officer,
+        category: 'Scheme Non-Delivery'
+      }
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-green-50">
@@ -106,53 +181,67 @@ const Schemes = () => {
 
         {/* Schemes Grid */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredSchemes.map((scheme) => (
-            <Card key={scheme.id} className="hover:shadow-lg transition-shadow duration-300 border-l-4 border-yellow-500">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="text-4xl mb-2">{scheme.image}</div>
-                  <Badge variant={scheme.status === 'Active' ? 'default' : 'secondary'}>
-                    {scheme.status}
-                  </Badge>
-                </div>
-                <CardTitle className="text-xl text-gray-800">{scheme.name}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-gray-600">{scheme.description}</p>
-                
-                <div>
-                  <h4 className="font-semibold text-sm text-gray-800 mb-1">Eligibility:</h4>
-                  <p className="text-sm text-gray-600">{scheme.eligibility}</p>
-                </div>
-                
-                <div>
-                  <Badge variant="outline" className="text-xs">
-                    {scheme.category}
-                  </Badge>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button size="sm" className="flex-1 bg-yellow-500 hover:bg-yellow-600">
-                    <ExternalLink className="w-4 h-4 mr-1" />
-                    Apply Now
+          {filteredSchemes.map((scheme) => {
+            const colors = getColorClasses(scheme.color);
+            return (
+              <Card key={scheme.id} className={`hover:shadow-lg transition-shadow duration-300 border-l-4 ${colors.border}`}>
+                <CardHeader>
+                  <div className="w-full h-32 mb-4 rounded-lg overflow-hidden">
+                    <img 
+                      src={scheme.image} 
+                      alt={scheme.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-xl text-gray-800">{scheme.name}</CardTitle>
+                    <Badge variant={scheme.status === 'Active' ? 'default' : 'secondary'}>
+                      {scheme.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-gray-600">{scheme.description}</p>
+                  
+                  <div>
+                    <h4 className="font-semibold text-sm text-gray-800 mb-1">Eligibility:</h4>
+                    <p className="text-sm text-gray-600">{scheme.eligibility}</p>
+                  </div>
+                  
+                  <div>
+                    <Badge variant="outline" className="text-xs">
+                      {scheme.category}
+                    </Badge>
+                  </div>
+                  
+                  <div className="flex gap-2">
+                    <Button 
+                      size="sm" 
+                      className={`flex-1 ${colors.bg} ${colors.hover}`}
+                      onClick={() => handleApplyNow(scheme.officialUrl)}
+                    >
+                      <ExternalLink className="w-4 h-4 mr-1" />
+                      Apply Now
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1">
+                      <FileText className="w-4 h-4 mr-1" />
+                      Details
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="destructive" 
+                    className="w-full"
+                    onClick={() => handleComplaint(scheme)}
+                  >
+                    <AlertTriangle className="w-4 h-4 mr-1" />
+                    File Complaint
                   </Button>
-                  <Button size="sm" variant="outline" className="flex-1">
-                    <FileText className="w-4 h-4 mr-1" />
-                    Details
-                  </Button>
-                </div>
-                
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
-                  className="w-full"
-                  onClick={() => navigate('/report-scheme-issue')}
-                >
-                  Report Non-Delivery
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {filteredSchemes.length === 0 && (
