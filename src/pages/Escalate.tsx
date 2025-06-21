@@ -6,23 +6,27 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Upload, ArrowLeft, Camera } from "lucide-react";
+import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const Escalate = () => {
   const [complaintId, setComplaintId] = useState("");
+  const [email, setEmail] = useState("");
   const [escalateReason, setEscalateReason] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
   const [escalateTo, setEscalateTo] = useState("");
   const [hasPhoto, setHasPhoto] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [sentOtp, setSentOtp] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const escalationLevels = [
-    "District Collector",
     "Chief Secretary",
     "Minister",
     "Chief Minister's Office"
@@ -36,6 +40,52 @@ const Escalate = () => {
     "Officer non-cooperation",
     "Issue worsening"
   ];
+
+  const sendEmailOtp = () => {
+    if (!email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtp(otp);
+    setShowOtpInput(true);
+
+    // Simulate sending email (in real app, this would call an API)
+    console.log(`Sending OTP ${otp} to email: ${email}`);
+    
+    toast({
+      title: "OTP Sent",
+      description: `Verification code sent to ${email}. Please check your email.`,
+    });
+
+    // For demo purposes, show OTP in console
+    setTimeout(() => {
+      alert(`Demo OTP for ${email}: ${otp}`);
+    }, 1000);
+  };
+
+  const verifyEmailOtp = () => {
+    if (emailOtp === sentOtp) {
+      setIsEmailVerified(true);
+      setShowOtpInput(false);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct verification code.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const handlePhotoCapture = () => {
     if (fileInputRef.current) {
@@ -64,6 +114,16 @@ const Escalate = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!isEmailVerified) {
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email address before submitting escalation.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Handle escalation submission
     console.log("Escalation submitted");
     toast({
@@ -120,6 +180,53 @@ const Escalate = () => {
                   required
                 />
               </div>
+
+              <div>
+                <Label htmlFor="email">Email Address *</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
+                    required
+                    disabled={isEmailVerified}
+                    className="border-2 border-gray-300 focus:border-purple-500"
+                  />
+                  {!isEmailVerified && (
+                    <Button type="button" onClick={sendEmailOtp} variant="outline" className="whitespace-nowrap">
+                      <Mail className="w-4 h-4 mr-2" />
+                      Send OTP
+                    </Button>
+                  )}
+                  {isEmailVerified && (
+                    <Button type="button" variant="outline" disabled className="whitespace-nowrap">
+                      <Shield className="w-4 h-4 mr-2" />
+                      Verified
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {showOtpInput && !isEmailVerified && (
+                <div>
+                  <Label htmlFor="emailOtp">Email Verification Code</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      id="emailOtp"
+                      value={emailOtp}
+                      onChange={(e) => setEmailOtp(e.target.value)}
+                      placeholder="Enter 6-digit code"
+                      maxLength={6}
+                      className="border-2 border-gray-300 focus:border-purple-500"
+                    />
+                    <Button type="button" onClick={verifyEmailOtp} variant="outline">
+                      Verify
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <div className="space-y-2">
                 <Label htmlFor="escalateReason" className="text-gray-700 font-semibold">
@@ -231,7 +338,7 @@ const Escalate = () => {
                 <Button
                   type="submit"
                   className="flex-1 bg-gradient-to-r from-purple-600 to-red-600 hover:from-purple-700 hover:to-red-700"
-                  disabled={!complaintId || !escalateReason || !escalateTo}
+                  disabled={!complaintId || !escalateReason || !escalateTo || !isEmailVerified}
                 >
                   <AlertTriangle className="w-5 h-5 mr-2" />
                   Submit Escalation

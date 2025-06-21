@@ -1,5 +1,4 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -8,9 +7,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Globe } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export const LanguageToggle = () => {
-  const [currentLanguage, setCurrentLanguage] = useState("English");
+  const { language, setLanguage, t } = useLanguage();
 
   const languages = [
     { code: "en", name: "English", native: "English" },
@@ -18,10 +18,11 @@ export const LanguageToggle = () => {
     { code: "hi", name: "Hindi", native: "हिंदी" }
   ];
 
-  const handleLanguageChange = (language: string) => {
-    setCurrentLanguage(language);
-    // In a real app, this would trigger language change logic
-    console.log(`Language changed to: ${language}`);
+  const currentLanguage = languages.find(lang => lang.code === language);
+
+  const handleLanguageChange = (langCode: "en" | "te" | "hi") => {
+    setLanguage(langCode);
+    console.log(`Language changed to: ${langCode}`);
   };
 
   return (
@@ -29,14 +30,14 @@ export const LanguageToggle = () => {
       <DropdownMenuTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Globe className="w-4 h-4" />
-          {currentLanguage}
+          {currentLanguage?.native || "English"}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-white">
+      <DropdownMenuContent align="end" className="bg-white z-50">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => handleLanguageChange(lang.name)}
+            onClick={() => handleLanguageChange(lang.code as "en" | "te" | "hi")}
             className="cursor-pointer hover:bg-gray-100"
           >
             <span className="font-medium">{lang.native}</span>

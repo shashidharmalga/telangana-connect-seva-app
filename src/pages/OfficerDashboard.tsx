@@ -27,35 +27,72 @@ const OfficerDashboard = () => {
     "District Revenue Officer": ["Land Records", "Revenue Issues", "Property Documentation"],
     "DEO (District Education Officer)": ["Education", "School Infrastructure"],
     "Additional Collector": ["Administrative Issues", "Revenue Issues", "Land Records"],
-    "District Collector": ["Administrative Issues", "Revenue Issues", "Land Records", "Emergency Services"]
+    "District Collector": ["Administrative Issues", "Revenue Issues", "Land Records", "Emergency Services"],
+    // New district-specific officers
+    "Urban Development Officer": ["Roads & Infrastructure", "Sanitation", "Water Supply"],
+    "GHMC Commissioner": ["Roads & Infrastructure", "Sanitation", "Water Supply", "Electricity"],
+    "Traffic Police Officer": ["Roads & Infrastructure"],
+    "Health Officer": ["Healthcare", "Sanitation"],
+    "Municipal Commissioner": ["Roads & Infrastructure", "Water Supply", "Sanitation", "Electricity"],
+    "PWD Officer": ["Roads & Infrastructure", "Water Supply"],
+    "Agriculture Officer": ["Agriculture", "Water Supply"],
+    "Education Officer": ["Education"],
+    "Forest Officer": ["Agriculture"],
+    "Mining Officer": ["Roads & Infrastructure"]
+  };
+
+  // Officer to district mapping
+  const officerDistrictMapping: { [key: string]: string[] } = {
+    "District Collector": ["All Districts"], // District Collector handles all districts
+    "Urban Development Officer": ["Hyderabad", "Rangareddy"],
+    "GHMC Commissioner": ["Hyderabad"],
+    "Traffic Police Officer": ["Hyderabad"],
+    "Municipal Commissioner": ["Warangal Urban", "Nizamabad", "Karimnagar", "Rangareddy"],
+    "PWD Officer": ["Warangal Urban", "Warangal Rural", "Nizamabad", "Khammam", "Mahbubnagar"],
+    "Health Officer": ["Hyderabad", "Warangal Urban", "Karimnagar", "Nalgonda", "Rangareddy"],
+    "Agriculture Officer": ["Warangal Rural", "Medak", "Karimnagar", "Nalgonda", "Mahbubnagar", "Adilabad"],
+    "Education Officer": ["Nizamabad"],
+    "Irrigation Officer": ["Medak", "Khammam"],
+    "Forest Officer": ["Adilabad"],
+    "Mining Officer": ["Mancherial"],
+    "Mandal Officer": ["Warangal Rural", "Medak", "Khammam", "Nalgonda", "Mahbubnagar", "Adilabad", "Mancherial"]
   };
 
   // Default complaints for each department
   const getDefaultComplaints = (department: string) => {
     const issueTypes = departmentIssueMapping[department] || [];
+    const allowedDistricts = officerDistrictMapping[department] || [];
+    
+    const districts = allowedDistricts.includes("All Districts") ? 
+      ["Hyderabad", "Warangal Urban", "Nizamabad", "Karimnagar"] : 
+      allowedDistricts;
+    
     const defaultComplaints = [];
     
     issueTypes.forEach((issueType, index) => {
-      for (let i = 1; i <= 4; i++) {
-        defaultComplaints.push({
-          id: `DEF-${department.substring(0, 3).toUpperCase()}-${index + 1}-${i}`,
-          district: ["Hyderabad", "Warangal Urban", "Nizamabad", "Karimnagar"][Math.floor(Math.random() * 4)],
-          village: [`Village ${i}`, `Town ${i}`, `Area ${i}`, `Colony ${i}`][i - 1],
-          issueType: issueType,
-          description: `Sample ${issueType.toLowerCase()} complaint #${i}. This is a detailed description of the issue that needs attention from the ${department}.`,
-          status: ["Pending", "In Progress", "Completed"][Math.floor(Math.random() * 3)],
-          priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
-          submittedDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
-          location: `Sample location for ${issueType}`,
-          photos: [
-            "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=300&fit=crop",
-            "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop"
-          ],
-          videos: [
-            "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
-          ]
-        });
-      }
+      districts.forEach((district, districtIndex) => {
+        for (let i = 1; i <= 2; i++) {
+          defaultComplaints.push({
+            id: `DEF-${department.substring(0, 3).toUpperCase()}-${district.substring(0, 3).toUpperCase()}-${index + 1}-${i}`,
+            district: district,
+            village: `Village ${i} ${district}`,
+            issueType: issueType,
+            description: `Sample ${issueType.toLowerCase()} complaint #${i} in ${district}. This is a detailed description of the issue that needs attention from the ${department}.`,
+            status: ["Pending", "In Progress", "Completed"][Math.floor(Math.random() * 3)],
+            priority: ["High", "Medium", "Low"][Math.floor(Math.random() * 3)],
+            submittedDate: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+            location: `Sample location for ${issueType} in ${district}`,
+            assignedDistrict: district,
+            photos: [
+              "https://images.unsplash.com/photo-1581094794329-c8112a89af12?w=400&h=300&fit=crop",
+              "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=400&h=300&fit=crop"
+            ],
+            videos: [
+              "https://sample-videos.com/zip/10/mp4/SampleVideo_1280x720_1mb.mp4"
+            ]
+          });
+        }
+      });
     });
     
     return defaultComplaints;
@@ -85,13 +122,22 @@ const OfficerDashboard = () => {
 
   useEffect(() => {
     if (officerData && complaints.length > 0) {
-      // Filter complaints based on officer's department
+      // Filter complaints based on officer's department and district
       const relevantIssueTypes = departmentIssueMapping[officerData.govField] || [];
-      const filtered = complaints.filter(complaint => 
-        relevantIssueTypes.includes(complaint.issueType)
-      );
+      const allowedDistricts = officerDistrictMapping[officerData.govField] || [];
+      
+      const filtered = complaints.filter(complaint => {
+        const matchesIssueType = relevantIssueTypes.includes(complaint.issueType);
+        const matchesDistrict = allowedDistricts.includes("All Districts") || 
+                               allowedDistricts.includes(complaint.district) ||
+                               allowedDistricts.includes(complaint.assignedDistrict);
+        
+        return matchesIssueType && matchesDistrict;
+      });
+      
       setFilteredComplaints(filtered);
       console.log('Officer Department:', officerData.govField);
+      console.log('Allowed Districts:', allowedDistricts);
       console.log('Relevant Issue Types:', relevantIssueTypes);
       console.log('Filtered Complaints:', filtered);
     } else {
@@ -150,8 +196,11 @@ const OfficerDashboard = () => {
   const completedComplaints = filteredComplaints.filter(c => c.status === "Completed").length;
 
   // Generate heat map data from filtered complaints
-  const heatMapData = districts.map(district => {
-    const districtComplaints = filteredComplaints.filter(c => c.district === district);
+  const allowedDistricts = officerData ? (officerDistrictMapping[officerData.govField] || []) : [];
+  const relevantDistricts = allowedDistricts.includes("All Districts") ? districts : allowedDistricts;
+  
+  const heatMapData = relevantDistricts.map(district => {
+    const districtComplaints = filteredComplaints.filter(c => c.district === district || c.assignedDistrict === district);
     const resolved = districtComplaints.filter(c => c.status === "Completed").length;
     return {
       district,
@@ -189,6 +238,9 @@ const OfficerDashboard = () => {
               <div className="text-right">
                 <p className="font-semibold">{officerData.govField}</p>
                 <p className="text-sm text-yellow-100">ID: {officerData.employeeId}</p>
+                <p className="text-xs text-yellow-100">
+                  Districts: {allowedDistricts.includes("All Districts") ? "All" : allowedDistricts.join(", ")}
+                </p>
               </div>
               <Button onClick={() => {
                 localStorage.removeItem('officerData');
@@ -214,6 +266,9 @@ const OfficerDashboard = () => {
                 <h3 className="text-lg font-semibold text-gray-800">Department: {officerData.govField}</h3>
                 <p className="text-gray-600">
                   Handling: {departmentIssueMapping[officerData.govField]?.join(", ") || "All Issues"}
+                </p>
+                <p className="text-sm text-gray-500">
+                  Districts: {allowedDistricts.includes("All Districts") ? "All Districts" : allowedDistricts.join(", ")}
                 </p>
               </div>
             </div>
@@ -316,7 +371,7 @@ const OfficerDashboard = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Districts</SelectItem>
-                  {districts.map((district) => (
+                  {relevantDistricts.map((district) => (
                     <SelectItem key={district} value={district}>
                       {district}
                     </SelectItem>
@@ -347,11 +402,11 @@ const OfficerDashboard = () => {
                   </thead>
                   <tbody>
                     {filteredComplaints
-                      .filter(complaint => selectedDistrict === "all" || complaint.district === selectedDistrict)
+                      .filter(complaint => selectedDistrict === "all" || complaint.district === selectedDistrict || complaint.assignedDistrict === selectedDistrict)
                       .map((complaint) => (
                       <tr key={complaint.id} className="border-b border-gray-100 hover:bg-gray-50">
                         <td className="p-3 font-medium text-blue-600">{complaint.id}</td>
-                        <td className="p-3">{complaint.district}</td>
+                        <td className="p-3">{complaint.district || complaint.assignedDistrict}</td>
                         <td className="p-3">{complaint.village}</td>
                         <td className="p-3">{complaint.issueType}</td>
                         <td className="p-3">

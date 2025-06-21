@@ -1,5 +1,3 @@
-
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, Camera, MapPin, ArrowLeft } from "lucide-react";
+import { Upload, Camera, MapPin, ArrowLeft, Mail, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,6 +17,7 @@ const ReportIssue = () => {
   const [formData, setFormData] = useState({
     name: "",
     number: "",
+    email: "",
     district: "",
     village: "",
     issueType: "",
@@ -29,6 +28,10 @@ const ReportIssue = () => {
   const [hasPhoto, setHasPhoto] = useState(false);
   const [hasVideo, setHasVideo] = useState(false);
   const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
+  const [emailOtp, setEmailOtp] = useState("");
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [sentOtp, setSentOtp] = useState("");
+  const [showOtpInput, setShowOtpInput] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
@@ -42,10 +45,71 @@ const ReportIssue = () => {
     "Education", "Agriculture", "Sanitation", "Welfare Schemes"
   ];
 
-  const officers = [
-    "Village Panchayat Secretary", "Mandal Officer", "PWD Officer", 
-    "Irrigation Officer", "District Collector"
-  ];
+  // District-specific officers mapping
+  const districtOfficers: { [key: string]: string[] } = {
+    "Hyderabad": ["Urban Development Officer", "GHMC Commissioner", "Traffic Police Officer", "Health Officer"],
+    "Warangal Urban": ["Municipal Commissioner", "District Collector", "PWD Officer", "Health Officer"],
+    "Warangal Rural": ["District Collector", "Mandal Officer", "PWD Officer", "Agriculture Officer"],
+    "Medak": ["District Collector", "Mandal Officer", "Irrigation Officer", "Agriculture Officer"],
+    "Nizamabad": ["District Collector", "Municipal Commissioner", "PWD Officer", "Education Officer"],
+    "Karimnagar": ["District Collector", "Municipal Commissioner", "Health Officer", "Agriculture Officer"],
+    "Khammam": ["District Collector", "Mandal Officer", "Irrigation Officer", "PWD Officer"],
+    "Nalgonda": ["District Collector", "Mandal Officer", "Agriculture Officer", "Health Officer"],
+    "Mahbubnagar": ["District Collector", "Mandal Officer", "PWD Officer", "Agriculture Officer"],
+    "Rangareddy": ["District Collector", "Municipal Commissioner", "Urban Development Officer", "Health Officer"],
+    "Adilabad": ["District Collector", "Mandal Officer", "Forest Officer", "Agriculture Officer"],
+    "Mancherial": ["District Collector", "Mandal Officer", "Mining Officer", "Health Officer"]
+  };
+
+  const getOfficersForDistrict = () => {
+    return formData.district ? districtOfficers[formData.district] || [] : [];
+  };
+
+  const sendEmailOtp = () => {
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address first.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtp(otp);
+    setShowOtpInput(true);
+
+    // Simulate sending email (in real app, this would call an API)
+    console.log(`Sending OTP ${otp} to email: ${formData.email}`);
+    
+    toast({
+      title: "OTP Sent",
+      description: `Verification code sent to ${formData.email}. Please check your email.`,
+    });
+
+    // For demo purposes, show OTP in console
+    setTimeout(() => {
+      alert(`Demo OTP for ${formData.email}: ${otp}`);
+    }, 1000);
+  };
+
+  const verifyEmailOtp = () => {
+    if (emailOtp === sentOtp) {
+      setIsEmailVerified(true);
+      setShowOtpInput(false);
+      toast({
+        title: "Email Verified",
+        description: "Your email has been successfully verified.",
+      });
+    } else {
+      toast({
+        title: "Invalid OTP",
+        description: "Please enter the correct verification code.",
+        variant: "destructive"
+      });
+    }
+  };
 
   const sendConfirmationMessage = (reportId: string) => {
     // In a real application, this would integrate with an SMS service
@@ -104,10 +168,19 @@ const ReportIssue = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.name || !formData.number || !formData.district || !formData.village || !formData.issueType || !formData.description) {
+    if (!formData.name || !formData.number || !formData.email || !formData.district || !formData.village || !formData.issueType || !formData.description) {
       toast({
         title: "Missing Information",
         description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!isEmailVerified) {
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email address before submitting.",
         variant: "destructive"
       });
       return;
@@ -134,7 +207,7 @@ const ReportIssue = () => {
     // Generate unique ID
     const reportId = `TG${Date.now().toString().slice(-6)}`;
     
-    // Create report object
+    // Create report object with district-specific officer assignment
     const newReport = {
       id: reportId,
       ...formData,
@@ -142,7 +215,8 @@ const ReportIssue = () => {
       priority: "Medium" as const,
       submittedDate: new Date().toLocaleDateString('en-IN'),
       hasPhoto,
-      hasVideo
+      hasVideo,
+      assignedDistrict: formData.district // This helps route to specific district officers
     };
 
     // Save to user reports
@@ -150,7 +224,7 @@ const ReportIssue = () => {
     existingUserReports.push(newReport);
     localStorage.setItem('userReports', JSON.stringify(existingUserReports));
 
-    // Save to officer complaints (for officer dashboard)
+    // Save to district-specific officer complaints
     const existingOfficerComplaints = JSON.parse(localStorage.getItem('officerComplaints') || '[]');
     existingOfficerComplaints.push(newReport);
     localStorage.setItem('officerComplaints', JSON.stringify(existingOfficerComplaints));
@@ -169,6 +243,7 @@ const ReportIssue = () => {
     setFormData({
       name: "",
       number: "",
+      email: "",
       district: "",
       village: "",
       issueType: "",
@@ -179,6 +254,9 @@ const ReportIssue = () => {
     setHasPhoto(false);
     setHasVideo(false);
     setCapturedPhoto(null);
+    setIsEmailVerified(false);
+    setEmailOtp("");
+    setShowOtpInput(false);
 
     // Navigate to My Reports after a short delay
     setTimeout(() => {
@@ -238,13 +316,58 @@ const ReportIssue = () => {
                       required
                     />
                   </div>
+
+                  <div>
+                    <Label htmlFor="email">Email Address / ईमेल पता / ఇమెయిల్ చిరునామా *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        placeholder="Enter your email address"
+                        required
+                        disabled={isEmailVerified}
+                      />
+                      {!isEmailVerified && (
+                        <Button type="button" onClick={sendEmailOtp} variant="outline" className="whitespace-nowrap">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send OTP
+                        </Button>
+                      )}
+                      {isEmailVerified && (
+                        <Button type="button" variant="outline" disabled className="whitespace-nowrap">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Verified
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {showOtpInput && !isEmailVerified && (
+                    <div>
+                      <Label htmlFor="emailOtp">Email Verification Code</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="emailOtp"
+                          value={emailOtp}
+                          onChange={(e) => setEmailOtp(e.target.value)}
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                        />
+                        <Button type="button" onClick={verifyEmailOtp} variant="outline">
+                          Verify
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="district">District / जिला / జిల్లా *</Label>
                     <Select value={formData.district} onValueChange={(value) => 
-                      setFormData({...formData, district: value})
+                      setFormData({...formData, district: value, officer: ""})
                     }>
                       <SelectTrigger>
                         <SelectValue placeholder="Select District" />
@@ -292,14 +415,16 @@ const ReportIssue = () => {
 
                   <div>
                     <Label htmlFor="officer">Responsible Officer / जिम्मेदार अधिकारी / బాధ్యతాయుత అధికారి</Label>
-                    <Select value={formData.officer} onValueChange={(value) => 
-                      setFormData({...formData, officer: value})
-                    }>
+                    <Select 
+                      value={formData.officer} 
+                      onValueChange={(value) => setFormData({...formData, officer: value})}
+                      disabled={!formData.district}
+                    >
                       <SelectTrigger>
-                        <SelectValue placeholder="Select Officer" />
+                        <SelectValue placeholder={formData.district ? "Select Officer" : "Select District First"} />
                       </SelectTrigger>
                       <SelectContent>
-                        {officers.map((officer) => (
+                        {getOfficersForDistrict().map((officer) => (
                           <SelectItem key={officer} value={officer}>
                             {officer}
                           </SelectItem>
@@ -400,7 +525,7 @@ const ReportIssue = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg"
-                  disabled={!hasPhoto}
+                  disabled={!hasPhoto || !isEmailVerified}
                 >
                   {t('submitReport')} / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
                 </Button>
@@ -414,4 +539,3 @@ const ReportIssue = () => {
 };
 
 export default ReportIssue;
-
