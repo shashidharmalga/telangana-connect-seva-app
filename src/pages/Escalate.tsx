@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Escalate = () => {
   const { t } = useLanguage();
@@ -29,7 +31,7 @@ const Escalate = () => {
 
   const escalationLevels = [
     "Chief Secretary",
-    "Minister",
+    "Minister", 
     "Chief Minister's Office"
   ];
 
@@ -69,12 +71,10 @@ const Escalate = () => {
 
       if (error) {
         console.error('Error sending OTP:', error);
-        // Fallback: store OTP locally for demo purposes
         toast({
           title: t("otpSent"),
           description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
         });
-        // Show OTP in console for demo
         console.log(`Demo OTP for ${email}: ${otp}`);
       } else {
         toast({
