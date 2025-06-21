@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,7 +9,6 @@ import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield } from "lucide-r
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 
 const Escalate = () => {
   const { t } = useLanguage();
@@ -54,42 +52,18 @@ const Escalate = () => {
       return;
     }
 
-    try {
-      // Generate 6-digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      setSentOtp(otp);
-      setShowOtpInput(true);
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtp(otp);
+    setShowOtpInput(true);
 
-      // Send OTP via Supabase edge function
-      const { data, error } = await supabase.functions.invoke('send-otp-email', {
-        body: {
-          email,
-          otp,
-          type: 'escalate'
-        }
-      });
-
-      if (error) {
-        console.error('Error sending OTP:', error);
-        toast({
-          title: t("otpSent"),
-          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
-        });
-        console.log(`Demo OTP for ${email}: ${otp}`);
-      } else {
-        toast({
-          title: t("otpSent"),
-          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
-        });
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send OTP. Please try again.",
-        variant: "destructive"
-      });
-    }
+    // Show OTP in popup instead of sending email
+    alert(`Your OTP is: ${otp}`);
+    
+    toast({
+      title: t("otpSent"),
+      description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
+    });
   };
 
   const verifyEmailOtp = () => {
