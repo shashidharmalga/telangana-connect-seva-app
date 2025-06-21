@@ -18,7 +18,7 @@ const OfficerDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // Department to issue type mapping - Updated with more officers
+  // Department to issue type mapping
   const departmentIssueMapping: { [key: string]: string[] } = {
     "District Panchayath Officer": ["Water Supply", "Sanitation", "Road Maintenance", "Street Lighting"],
     "MRO (Mandal Revenue Officer)": ["Land Records", "Revenue Issues", "Property Documentation"],
@@ -28,10 +28,11 @@ const OfficerDashboard = () => {
     "DEO (District Education Officer)": ["Education", "School Infrastructure"],
     "Additional Collector": ["Administrative Issues", "Revenue Issues", "Land Records"],
     "District Collector": ["Administrative Issues", "Revenue Issues", "Land Records", "Emergency Services"],
-    "Health Officer": ["Healthcare", "Sanitation", "Water Supply"],
+    // New district-specific officers
     "Urban Development Officer": ["Roads & Infrastructure", "Sanitation", "Water Supply"],
     "GHMC Commissioner": ["Roads & Infrastructure", "Sanitation", "Water Supply", "Electricity"],
     "Traffic Police Officer": ["Roads & Infrastructure"],
+    "Health Officer": ["Healthcare", "Sanitation"],
     "Municipal Commissioner": ["Roads & Infrastructure", "Water Supply", "Sanitation", "Electricity"],
     "PWD Officer": ["Roads & Infrastructure", "Water Supply"],
     "Agriculture Officer": ["Agriculture", "Water Supply"],
@@ -40,23 +41,21 @@ const OfficerDashboard = () => {
     "Mining Officer": ["Roads & Infrastructure"]
   };
 
-  // Officer to district mapping - Updated with more officers
+  // Officer to district mapping
   const officerDistrictMapping: { [key: string]: string[] } = {
-    "District Collector": ["All Districts"],
-    "Additional Collector": ["Hyderabad", "Warangal Urban", "Nizamabad", "Karimnagar"],
-    "MRO (Mandal Revenue Officer)": ["Warangal Rural", "Medak", "Khammam", "Nalgonda", "Mahbubnagar", "Adilabad", "Mancherial"],
-    "Tahsildar": ["Warangal Rural", "Medak", "Khammam", "Nalgonda", "Mahbubnagar", "Adilabad", "Mancherial"],
-    "Irrigation Officer": ["Medak", "Khammam", "Nalgonda", "Mahbubnagar"],
-    "Health Officer": ["Hyderabad", "Warangal Urban", "Karimnagar", "Nalgonda", "Rangareddy"],
+    "District Collector": ["All Districts"], // District Collector handles all districts
     "Urban Development Officer": ["Hyderabad", "Rangareddy"],
     "GHMC Commissioner": ["Hyderabad"],
     "Traffic Police Officer": ["Hyderabad"],
     "Municipal Commissioner": ["Warangal Urban", "Nizamabad", "Karimnagar", "Rangareddy"],
     "PWD Officer": ["Warangal Urban", "Warangal Rural", "Nizamabad", "Khammam", "Mahbubnagar"],
+    "Health Officer": ["Hyderabad", "Warangal Urban", "Karimnagar", "Nalgonda", "Rangareddy"],
     "Agriculture Officer": ["Warangal Rural", "Medak", "Karimnagar", "Nalgonda", "Mahbubnagar", "Adilabad"],
     "Education Officer": ["Nizamabad"],
+    "Irrigation Officer": ["Medak", "Khammam"],
     "Forest Officer": ["Adilabad"],
-    "Mining Officer": ["Mancherial"]
+    "Mining Officer": ["Mancherial"],
+    "Mandal Officer": ["Warangal Rural", "Medak", "Khammam", "Nalgonda", "Mahbubnagar", "Adilabad", "Mancherial"]
   };
 
   // Default complaints for each department

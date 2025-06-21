@@ -5,111 +5,93 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield, User } from "lucide-react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { Upload, Camera, MapPin, ArrowLeft, Mail, Shield } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { supabase } from "@/integrations/supabase/client";
 
 const ReportIssue = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { t } = useLanguage();
-  const [fullName, setFullName] = useState("");
-  const [mobileNumber, setMobileNumber] = useState("");
-  const [email, setEmail] = useState("");
+  const [formData, setFormData] = useState({
+    name: "",
+    number: "",
+    email: "",
+    district: "",
+    village: "",
+    issueType: "",
+    officer: "",
+    description: "",
+    location: ""
+  });
+  const [hasPhoto, setHasPhoto] = useState(false);
+  const [hasVideo, setHasVideo] = useState(false);
+  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
   const [emailOtp, setEmailOtp] = useState("");
   const [isEmailVerified, setIsEmailVerified] = useState(false);
   const [sentOtp, setSentOtp] = useState("");
   const [showOtpInput, setShowOtpInput] = useState(false);
-  const [district, setDistrict] = useState("");
-  const [village, setVillage] = useState("");
-  const [issueType, setIssueType] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("Medium");
-  const [hasPhoto, setHasPhoto] = useState(false);
-  const [capturedPhoto, setCapturedPhoto] = useState<string | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Check if coming from schemes page
-  const fromSchemes = location.state?.fromSchemes;
+  const videoInputRef = useRef<HTMLInputElement>(null);
 
   const districts = [
     "Hyderabad", "Warangal Urban", "Warangal Rural", "Medak", "Nizamabad", "Karimnagar",
     "Khammam", "Nalgonda", "Mahbubnagar", "Rangareddy", "Adilabad", "Mancherial"
   ];
 
-  const villages: { [key: string]: string[] } = {
-    Hyderabad: ["Gachibowli", "Jubilee Hills", "Madhapur", "Kukatpally"],
-    "Warangal Urban": ["Hanamkonda", "Kazipet", "Warangal"],
-    "Warangal Rural": ["Geesugonda", "Sangem", "Wardhannapet"],
-    Medak: ["Narsapur", "Siddipet", "Ramayampet"],
-    Nizamabad: ["Bodhan", "Banswada", "Nizamabad"],
-    Karimnagar: ["Huzurabad", "Jagtial", "Manakondur"],
-    Khammam: ["Kothagudem", "Sathupalli", "Wyra"],
-    Nalgonda: ["Miryalaguda", "Suryapet", "Devarakonda"],
-    Mahbubnagar: ["Jadcherla", "Shadnagar", "Wanaparthy"],
-    Rangareddy: ["Shamshabad", "Ibrahimpatnam", "Rajendranagar"],
-    Adilabad: ["Mancherial", "Nirmal", "Bhainsa"],
-    Mancherial: ["Bellampalli", "Chennur", "Mandamarri"]
-  };
-
   const issueTypes = [
-    "Water Supply", "Sanitation", "Road Maintenance", "Street Lighting",
-    "Land Records", "Revenue Issues", "Property Documentation", "Administrative Issues",
-    "Education", "School Infrastructure", "Healthcare", "Agriculture", "Irrigation", "Drainage",
-    "Roads & Infrastructure", "Electricity", "Emergency Services", "Other"
+    "Roads & Infrastructure", "Water Supply", "Electricity", "Healthcare", 
+    "Education", "Agriculture", "Sanitation", "Welfare Schemes"
   ];
 
-  const sendEmailOtp = async () => {
-    if (!email) {
+  // District-specific officers mapping
+  const districtOfficers: { [key: string]: string[] } = {
+    "Hyderabad": ["Urban Development Officer", "GHMC Commissioner", "Traffic Police Officer", "Health Officer"],
+    "Warangal Urban": ["Municipal Commissioner", "District Collector", "PWD Officer", "Health Officer"],
+    "Warangal Rural": ["District Collector", "Mandal Officer", "PWD Officer", "Agriculture Officer"],
+    "Medak": ["District Collector", "Mandal Officer", "Irrigation Officer", "Agriculture Officer"],
+    "Nizamabad": ["District Collector", "Municipal Commissioner", "PWD Officer", "Education Officer"],
+    "Karimnagar": ["District Collector", "Municipal Commissioner", "Health Officer", "Agriculture Officer"],
+    "Khammam": ["District Collector", "Mandal Officer", "Irrigation Officer", "PWD Officer"],
+    "Nalgonda": ["District Collector", "Mandal Officer", "Agriculture Officer", "Health Officer"],
+    "Mahbubnagar": ["District Collector", "Mandal Officer", "PWD Officer", "Agriculture Officer"],
+    "Rangareddy": ["District Collector", "Municipal Commissioner", "Urban Development Officer", "Health Officer"],
+    "Adilabad": ["District Collector", "Mandal Officer", "Forest Officer", "Agriculture Officer"],
+    "Mancherial": ["District Collector", "Mandal Officer", "Mining Officer", "Health Officer"]
+  };
+
+  const getOfficersForDistrict = () => {
+    return formData.district ? districtOfficers[formData.district] || [] : [];
+  };
+
+  const sendEmailOtp = () => {
+    if (!formData.email) {
       toast({
-        title: t("emailRequired"),
-        description: t("enterEmailFirst"),
+        title: "Email Required",
+        description: "Please enter your email address first.",
         variant: "destructive"
       });
       return;
     }
 
-    try {
-      // Generate 6-digit OTP
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
-      setSentOtp(otp);
-      setShowOtpInput(true);
+    // Generate 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    setSentOtp(otp);
+    setShowOtpInput(true);
 
-      // Send OTP via Supabase edge function
-      const { data, error } = await supabase.functions.invoke('send-otp-email', {
-        body: {
-          email,
-          otp,
-          type: 'report'
-        }
-      });
+    // Simulate sending email (in real app, this would call an API)
+    console.log(`Sending OTP ${otp} to email: ${formData.email}`);
+    
+    toast({
+      title: "OTP Sent",
+      description: `Verification code sent to ${formData.email}. Please check your email.`,
+    });
 
-      if (error) {
-        console.error('Error sending OTP:', error);
-        // Fallback: store OTP locally for demo purposes
-        toast({
-          title: t("otpSent"),
-          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
-        });
-        // Show OTP in console for demo
-        console.log(`Demo OTP for ${email}: ${otp}`);
-      } else {
-        toast({
-          title: t("otpSent"),
-          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
-        });
-      }
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send OTP. Please try again.",
-        variant: "destructive"
-      });
-    }
+    // For demo purposes, show OTP in console
+    setTimeout(() => {
+      alert(`Demo OTP for ${formData.email}: ${otp}`);
+    }, 1000);
   };
 
   const verifyEmailOtp = () => {
@@ -117,16 +99,26 @@ const ReportIssue = () => {
       setIsEmailVerified(true);
       setShowOtpInput(false);
       toast({
-        title: t("emailVerified"),
-        description: t("emailVerifiedSuccess"),
+        title: "Email Verified",
+        description: "Your email has been successfully verified.",
       });
     } else {
       toast({
-        title: t("invalidOTP"),
-        description: t("enterCorrectCode"),
+        title: "Invalid OTP",
+        description: "Please enter the correct verification code.",
         variant: "destructive"
       });
     }
+  };
+
+  const sendConfirmationMessage = (reportId: string) => {
+    // In a real application, this would integrate with an SMS service
+    console.log(`Sending confirmation SMS to ${formData.number}: Your complaint has been registered with ID: ${reportId}. Track your progress on our portal.`);
+    
+    toast({
+      title: "Confirmation Sent",
+      description: `A confirmation message has been sent to ${formData.number} with your report ID: ${reportId}`,
+    });
   };
 
   const handlePhotoCapture = () => {
@@ -154,347 +146,393 @@ const ReportIssue = () => {
     }
   };
 
+  const handleVideoUpload = () => {
+    if (videoInputRef.current) {
+      videoInputRef.current.accept = "video/*";
+      videoInputRef.current.capture = "environment";
+      videoInputRef.current.click();
+    }
+  };
+
+  const handleVideoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setHasVideo(true);
+      toast({
+        title: "Video Uploaded",
+        description: "Video has been successfully uploaded.",
+      });
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!isEmailVerified) {
+    if (!formData.name || !formData.number || !formData.email || !formData.district || !formData.village || !formData.issueType || !formData.description) {
       toast({
-        title: t("emailNotVerified"),
-        description: t("verifyEmailFirst"),
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
         variant: "destructive"
       });
       return;
     }
 
-    // Generate report ID
-    const reportId = `TG${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`;
+    if (!isEmailVerified) {
+      toast({
+        title: "Email Not Verified",
+        description: "Please verify your email address before submitting.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.number.length !== 10) {
+      toast({
+        title: "Invalid Number",
+        description: "Please enter a valid 10-digit mobile number.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!hasPhoto) {
+      toast({
+        title: "Missing Photo",
+        description: "Photo upload is mandatory for reporting issues.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Generate unique ID
+    const reportId = `TG${Date.now().toString().slice(-6)}`;
     
-    const reportData = {
+    // Create report object with district-specific officer assignment
+    const newReport = {
       id: reportId,
-      fullName,
-      mobileNumber,
-      email,
-      district,
-      village,
-      issueType,
-      description,
-      priority,
-      status: "Pending",
-      submittedDate: new Date().toLocaleDateString(),
-      photos: capturedPhoto ? [capturedPhoto] : [],
-      assignedDistrict: district
+      ...formData,
+      status: "Pending" as const,
+      priority: "Medium" as const,
+      submittedDate: new Date().toLocaleDateString('en-IN'),
+      hasPhoto,
+      hasVideo,
+      assignedDistrict: formData.district // This helps route to specific district officers
     };
 
-    // Store in localStorage
-    const existingReports = JSON.parse(localStorage.getItem('userReports') || '[]');
-    existingReports.push(reportData);
-    localStorage.setItem('userReports', JSON.stringify(existingReports));
+    // Save to user reports
+    const existingUserReports = JSON.parse(localStorage.getItem('userReports') || '[]');
+    existingUserReports.push(newReport);
+    localStorage.setItem('userReports', JSON.stringify(existingUserReports));
 
-    // Also store for officer dashboard
-    const officerComplaints = JSON.parse(localStorage.getItem('officerComplaints') || '[]');
-    officerComplaints.push(reportData);
-    localStorage.setItem('officerComplaints', JSON.stringify(officerComplaints));
+    // Save to district-specific officer complaints
+    const existingOfficerComplaints = JSON.parse(localStorage.getItem('officerComplaints') || '[]');
+    existingOfficerComplaints.push(newReport);
+    localStorage.setItem('officerComplaints', JSON.stringify(existingOfficerComplaints));
 
-    console.log("Report submitted:", reportData);
+    console.log("Issue reported:", newReport);
+    
+    // Send confirmation message
+    sendConfirmationMessage(reportId);
+    
     toast({
-      title: t("reportSubmitted"),
-      description: t("reportSubmittedSuccess"),
+      title: "Report Submitted Successfully!",
+      description: `Your report ID is ${reportId}. You can track its progress in My Reports.`,
     });
 
-    // Navigate back to schemes if came from there, otherwise go to home
-    if (fromSchemes) {
-      navigate('/schemes');
-    } else {
-      navigate('/');
-    }
+    // Reset form
+    setFormData({
+      name: "",
+      number: "",
+      email: "",
+      district: "",
+      village: "",
+      issueType: "",
+      officer: "",
+      description: "",
+      location: ""
+    });
+    setHasPhoto(false);
+    setHasVideo(false);
+    setCapturedPhoto(null);
+    setIsEmailVerified(false);
+    setEmailOtp("");
+    setShowOtpInput(false);
+
+    // Navigate to My Reports after a short delay
+    setTimeout(() => {
+      navigate('/my-reports');
+    }, 2000);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
-      <header className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
-        <div className="container mx-auto px-4 py-6">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() => fromSchemes ? navigate('/schemes') : navigate('/')}
-              variant="ghost"
-              className="text-white hover:bg-white/20"
-            >
-              <ArrowLeft className="w-5 h-5 mr-2" />
-              {fromSchemes ? t("backToSchemes") : t("backToHome")}
-            </Button>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold">{t("reportIssueTitle")}</h1>
-              <p className="text-blue-100">{t("reportIssueSubtitle")}</p>
-            </div>
-            <Button
-              onClick={() => navigate('/related-officers')}
-              variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
-            >
-              <User className="w-5 h-5 mr-2" />
-              {t("relatedOfficers") || "Related Officers"}
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-orange-50">
+      <header className="bg-white shadow-sm border-b-4 border-red-500">
+        <div className="container mx-auto px-4 py-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => navigate('/')}
+            className="mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            {t('backToHome')}
+          </Button>
+          <h1 className="text-3xl font-bold text-gray-800">{t('reportIssue')}</h1>
+          <p className="text-gray-600">समस्या रिपोर्ट करें | సమస్యను నివేదించండి</p>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <Card className="max-w-2xl mx-auto border-2 border-blue-200">
-          <CardHeader className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-            <CardTitle className="text-2xl flex items-center gap-3">
-              <AlertTriangle className="w-8 h-8" />
-              {t("reportIssueTitle")}
-            </CardTitle>
-          </CardHeader>
+        <div className="max-w-2xl mx-auto">
+          <Card className="border-2 border-red-200">
+            <CardHeader>
+              <CardTitle className="text-2xl text-red-600">Submit Your Complaint</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Personal Information Section */}
+                <div className="space-y-4 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-lg font-semibold text-gray-700">Personal Information</h3>
+                  
+                  <div>
+                    <Label htmlFor="name">Full Name / पूरा नाम / పూర్తి పేరు *</Label>
+                    <Input
+                      id="name"
+                      value={formData.name}
+                      onChange={(e) => setFormData({...formData, name: e.target.value})}
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
 
-          <CardContent className="p-6">
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Personal Information Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                  {t("personalInfo")}
-                </h3>
-                
-                <div className="space-y-2">
-                  <Label htmlFor="fullName" className="text-gray-700 font-semibold">
-                    {t("fullName")} *
-                  </Label>
-                  <Input
-                    id="fullName"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder={t("enterFullName")}
-                    className="border-2 border-gray-300 focus:border-blue-500"
-                    required
-                  />
+                  <div>
+                    <Label htmlFor="number">Mobile Number / मोबाइल नंबर / మొబైల్ నంబర్ *</Label>
+                    <Input
+                      id="number"
+                      value={formData.number}
+                      onChange={(e) => setFormData({...formData, number: e.target.value})}
+                      placeholder="Enter 10-digit mobile number"
+                      maxLength={10}
+                      pattern="[0-9]{10}"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <Label htmlFor="email">Email Address / ईमेल पता / ఇమెయిల్ చిరునామా *</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="email"
+                        type="email"
+                        value={formData.email}
+                        onChange={(e) => setFormData({...formData, email: e.target.value})}
+                        placeholder="Enter your email address"
+                        required
+                        disabled={isEmailVerified}
+                      />
+                      {!isEmailVerified && (
+                        <Button type="button" onClick={sendEmailOtp} variant="outline" className="whitespace-nowrap">
+                          <Mail className="w-4 h-4 mr-2" />
+                          Send OTP
+                        </Button>
+                      )}
+                      {isEmailVerified && (
+                        <Button type="button" variant="outline" disabled className="whitespace-nowrap">
+                          <Shield className="w-4 h-4 mr-2" />
+                          Verified
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+
+                  {showOtpInput && !isEmailVerified && (
+                    <div>
+                      <Label htmlFor="emailOtp">Email Verification Code</Label>
+                      <div className="flex gap-2">
+                        <Input
+                          id="emailOtp"
+                          value={emailOtp}
+                          onChange={(e) => setEmailOtp(e.target.value)}
+                          placeholder="Enter 6-digit code"
+                          maxLength={6}
+                        />
+                        <Button type="button" onClick={verifyEmailOtp} variant="outline">
+                          Verify
+                        </Button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="mobileNumber" className="text-gray-700 font-semibold">
-                    {t("mobileNumber")} *
-                  </Label>
-                  <Input
-                    id="mobileNumber"
-                    value={mobileNumber}
-                    onChange={(e) => setMobileNumber(e.target.value)}
-                    placeholder={t("enterMobileNumber")}
-                    className="border-2 border-gray-300 focus:border-blue-500"
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="district">District / जिला / జిల్లా *</Label>
+                    <Select value={formData.district} onValueChange={(value) => 
+                      setFormData({...formData, district: value, officer: ""})
+                    }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select District" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {districts.map((district) => (
+                          <SelectItem key={district} value={district}>
+                            {district}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="village">Village / गांव / గ్రామం *</Label>
+                    <Input
+                      id="village"
+                      value={formData.village}
+                      onChange={(e) => setFormData({...formData, village: e.target.value})}
+                      placeholder="Enter village name"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="issueType">Issue Type / समस्या प्रकार / సమస్య రకం *</Label>
+                    <Select value={formData.issueType} onValueChange={(value) => 
+                      setFormData({...formData, issueType: value})
+                    }>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Issue Type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {issueTypes.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="officer">Responsible Officer / जिम्मेदार अधिकारी / బాధ్యతాయుత అధికారి</Label>
+                    <Select 
+                      value={formData.officer} 
+                      onValueChange={(value) => setFormData({...formData, officer: value})}
+                      disabled={!formData.district}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={formData.district ? "Select Officer" : "Select District First"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {getOfficersForDistrict().map((officer) => (
+                          <SelectItem key={officer} value={officer}>
+                            {officer}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div>
+                  <Label htmlFor="description">Description / विवरण / వివరణ *</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Describe the issue in detail..."
+                    rows={4}
                     required
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="email">{t("emailAddress")} *</Label>
+                  <Label htmlFor="location">Location / स्थान / స్థానం</Label>
                   <div className="flex gap-2">
                     <Input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder={t("enterEmailAddress")}
-                      required
-                      disabled={isEmailVerified}
-                      className="border-2 border-gray-300 focus:border-blue-500"
+                      id="location"
+                      value={formData.location}
+                      onChange={(e) => setFormData({...formData, location: e.target.value})}
+                      placeholder="Enter specific location"
                     />
-                    {!isEmailVerified && (
-                      <Button type="button" onClick={sendEmailOtp} variant="outline" className="whitespace-nowrap">
-                        <Mail className="w-4 h-4 mr-2" />
-                        {t("sendOTP")}
-                      </Button>
-                    )}
-                    {isEmailVerified && (
-                      <Button type="button" variant="outline" disabled className="whitespace-nowrap">
-                        <Shield className="w-4 h-4 mr-2" />
-                        {t("verified")}
-                      </Button>
-                    )}
+                    <Button type="button" variant="outline" size="icon">
+                      <MapPin className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
 
-                {showOtpInput && !isEmailVerified && (
-                  <div>
-                    <Label htmlFor="emailOtp">{t("emailVerificationCode")}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        id="emailOtp"
-                        value={emailOtp}
-                        onChange={(e) => setEmailOtp(e.target.value)}
-                        placeholder={t("enterVerificationCode")}
-                        maxLength={6}
-                        className="border-2 border-gray-300 focus:border-blue-500"
-                      />
-                      <Button type="button" onClick={verifyEmailOtp} variant="outline">
-                        {t("verify")}
+                {/* Enhanced File Upload Section with Camera */}
+                <div className="space-y-4">
+                  <Label>Evidence / प्रमाण / సాక్ష్యం</Label>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Button 
+                        type="button" 
+                        variant={hasPhoto ? "default" : "outline"} 
+                        className={`h-24 w-full flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                        onClick={handlePhotoCapture}
+                      >
+                        <Camera className="w-6 h-6 mb-2" />
+                        <span className="text-sm">{hasPhoto ? 'Photo Captured ✓' : 'Take Photo *'}</span>
                       </Button>
+                      {capturedPhoto && (
+                        <div className="mt-2">
+                          <img 
+                            src={capturedPhoto} 
+                            alt="Captured" 
+                            className="w-full h-32 object-cover rounded-md border"
+                          />
+                        </div>
+                      )}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={handlePhotoChange}
+                        className="hidden"
+                      />
+                    </div>
+                    
+                    <div className="space-y-2">
+                      <Button 
+                        type="button" 
+                        variant={hasVideo ? "default" : "outline"} 
+                        className={`h-24 w-full flex-col ${hasVideo ? 'bg-green-500 hover:bg-green-600' : ''}`}
+                        onClick={handleVideoUpload}
+                      >
+                        <Upload className="w-6 h-6 mb-2" />
+                        <span className="text-sm">{hasVideo ? 'Video Uploaded ✓' : 'Upload Video (Optional)'}</span>
+                      </Button>
+                      <input
+                        ref={videoInputRef}
+                        type="file"
+                        accept="video/*"
+                        capture="environment"
+                        onChange={handleVideoChange}
+                        className="hidden"
+                      />
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* Issue Details Section */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold text-gray-800 border-b pb-2">
-                  {t("issueDetails")}
-                </h3>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="district" className="text-gray-700 font-semibold">
-                      {t("district")} *
-                    </Label>
-                    <Select value={district} onValueChange={setDistrict}>
-                      <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500">
-                        <SelectValue placeholder={t("selectDistrict")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {districts.map((d) => (
-                          <SelectItem key={d} value={d}>
-                            {d}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="village" className="text-gray-700 font-semibold">
-                      {t("village")} *
-                    </Label>
-                    <Select value={village} onValueChange={setVillage}>
-                      <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500">
-                        <SelectValue placeholder={t("selectVillage")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {(villages[district] || []).map((v) => (
-                          <SelectItem key={v} value={v}>
-                            {v}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <p className="text-sm text-red-600 font-medium">
+                    * Photo upload is mandatory for complaint submission
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Maximum file size: 5MB | अधिकतम फ़ाइल का आकार: 5MB | గరిష్ట ఫైల్ పరిమాణం: 5MB
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="issueType" className="text-gray-700 font-semibold">
-                    {t("issueType")} *
-                  </Label>
-                  <Select value={issueType} onValueChange={setIssueType}>
-                    <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500">
-                      <SelectValue placeholder={t("selectIssueType")} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {issueTypes.map((type) => (
-                        <SelectItem key={type} value={type}>
-                          {type}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="description" className="text-gray-700 font-semibold">
-                    {t("issueDescription")} *
-                  </Label>
-                  <Textarea
-                    id="description"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder={t("describeIssue")}
-                    className="border-2 border-gray-300 focus:border-blue-500 min-h-32"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="priority" className="text-gray-700 font-semibold">
-                    {t("priority")} *
-                  </Label>
-                  <Select value={priority} onValueChange={setPriority}>
-                    <SelectTrigger className="border-2 border-gray-300 focus:border-blue-500">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Low">{t("low")}</SelectItem>
-                      <SelectItem value="Medium">{t("medium")}</SelectItem>
-                      <SelectItem value="High">{t("high")}</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Evidence Upload Section */}
-              <div className="space-y-2">
-                <Label className="text-gray-700 font-semibold">
-                  {t("uploadEvidence")}
-                </Label>
-                <div className="space-y-4">
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
-                    <Button 
-                      type="button" 
-                      variant={hasPhoto ? "default" : "outline"} 
-                      className={`h-24 w-full flex-col ${hasPhoto ? 'bg-green-500 hover:bg-green-600' : ''}`}
-                      onClick={handlePhotoCapture}
-                    >
-                      <Camera className="w-8 h-8 mb-2" />
-                      <span>{hasPhoto ? t("photoCaptured") : t("takePhoto")}</span>
-                    </Button>
-                    {capturedPhoto && (
-                      <div className="mt-4">
-                        <img 
-                          src={capturedPhoto} 
-                          alt="Captured evidence" 
-                          className="w-full max-w-md mx-auto h-48 object-cover rounded-md border"
-                        />
-                      </div>
-                    )}
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/*"
-                      capture="environment"
-                      onChange={handlePhotoChange}
-                      className="hidden"
-                    />
-                  </div>
-                  
-                  <div className="border-2 border-dashed border-blue-300 rounded-lg p-6 text-center">
-                    <Upload className="w-12 h-12 text-blue-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">{t("uploadDocuments")}</p>
-                    <p className="text-sm text-gray-500">{t("uploadPhotos")}</p>
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="mt-4 border-blue-500 text-blue-600 hover:bg-blue-50"
-                    >
-                      {t("chooseFiles")}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => fromSchemes ? navigate('/schemes') : navigate('/')}
-                  className="flex-1"
+                <Button 
+                  type="submit" 
+                  className="w-full bg-red-500 hover:bg-red-600 text-white py-6 text-lg"
+                  disabled={!hasPhoto || !isEmailVerified}
                 >
-                  {t("cancel")}
+                  {t('submitReport')} / रिपोर्ट सबमिट करें / నివేదిక సమర్పించండి
                 </Button>
-                <Button
-                  type="submit"
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  disabled={!fullName || !mobileNumber || !email || !district || !village || !issueType || !description || !isEmailVerified}
-                >
-                  <AlertTriangle className="w-5 h-5 mr-2" />
-                  {t("submitReport")}
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
+              </form>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
