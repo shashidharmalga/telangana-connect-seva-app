@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import OfficerDashboard from "./pages/OfficerDashboard";
 import Escalate from "./pages/Escalate";
 import MyReports from "./pages/MyReports";
+import RelatedOfficers from "./pages/RelatedOfficers";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -33,6 +34,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/officer-dashboard" element={<OfficerDashboard />} />
             <Route path="/escalate" element={<Escalate />} />
+            <Route path="/related-officers" element={<RelatedOfficers />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

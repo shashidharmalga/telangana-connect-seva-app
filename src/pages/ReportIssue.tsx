@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield } from "lucide-react";
+import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield, User } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -222,10 +222,18 @@ const ReportIssue = () => {
               <ArrowLeft className="w-5 h-5 mr-2" />
               {fromSchemes ? t("backToSchemes") : t("backToHome")}
             </Button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-3xl font-bold">{t("reportIssueTitle")}</h1>
               <p className="text-blue-100">{t("reportIssueSubtitle")}</p>
             </div>
+            <Button
+              onClick={() => navigate('/related-officers')}
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              <User className="w-5 h-5 mr-2" />
+              {t("relatedOfficers") || "Related Officers"}
+            </Button>
           </div>
         </div>
       </header>
