@@ -2,7 +2,9 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, X } from "lucide-react";
+import { ExternalLink, X, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Scheme {
   id: number;
@@ -28,6 +30,9 @@ interface SchemeDetailsModalProps {
 }
 
 const SchemeDetailsModal = ({ scheme, isOpen, onClose }: SchemeDetailsModalProps) => {
+  const { t } = useLanguage();
+  const navigate = useNavigate();
+
   if (!scheme) return null;
 
   const getColorClasses = (color: string) => {
@@ -40,6 +45,11 @@ const SchemeDetailsModal = ({ scheme, isOpen, onClose }: SchemeDetailsModalProps
       rose: "bg-rose-500 hover:bg-rose-600"
     };
     return colorMap[color] || colorMap.blue;
+  };
+
+  const handleFileComplaint = () => {
+    onClose();
+    navigate('/report-issue', { state: { fromSchemes: true } });
   };
 
   return (
@@ -65,7 +75,7 @@ const SchemeDetailsModal = ({ scheme, isOpen, onClose }: SchemeDetailsModalProps
 
           <div className="flex items-center gap-4">
             <Badge variant={scheme.status === 'Active' ? 'default' : 'secondary'}>
-              {scheme.status}
+              {t("active")}
             </Badge>
             <Badge variant="outline">{scheme.category}</Badge>
           </div>
@@ -113,10 +123,18 @@ const SchemeDetailsModal = ({ scheme, isOpen, onClose }: SchemeDetailsModalProps
               onClick={() => window.open(scheme.officialUrl, '_blank')}
             >
               <ExternalLink className="w-4 h-4 mr-2" />
-              Apply Now
+              {t("applyNow")}
+            </Button>
+            <Button 
+              variant="outline" 
+              onClick={handleFileComplaint}
+              className="flex-1"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              File Complaint
             </Button>
             <Button variant="outline" onClick={onClose} className="flex-1">
-              Close
+              {t("close")}
             </Button>
           </div>
         </div>

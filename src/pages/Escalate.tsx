@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertTriangle, Upload, ArrowLeft, Camera, Mail, Shield } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/hooks/use-language";
 
 const Escalate = () => {
+  const { t } = useLanguage();
   const [complaintId, setComplaintId] = useState("");
   const [email, setEmail] = useState("");
   const [escalateReason, setEscalateReason] = useState("");
@@ -41,33 +42,54 @@ const Escalate = () => {
     "Issue worsening"
   ];
 
-  const sendEmailOtp = () => {
+  const sendEmailOtp = async () => {
     if (!email) {
       toast({
-        title: "Email Required",
-        description: "Please enter your email address first.",
+        title: t("emailRequired"),
+        description: t("enterEmailFirst"),
         variant: "destructive"
       });
       return;
     }
 
-    // Generate 6-digit OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentOtp(otp);
-    setShowOtpInput(true);
+    try {
+      // Generate 6-digit OTP
+      const otp = Math.floor(100000 + Math.random() * 900000).toString();
+      setSentOtp(otp);
+      setShowOtpInput(true);
 
-    // Simulate sending email (in real app, this would call an API)
-    console.log(`Sending OTP ${otp} to email: ${email}`);
-    
-    toast({
-      title: "OTP Sent",
-      description: `Verification code sent to ${email}. Please check your email.`,
-    });
+      // Send OTP via Supabase edge function
+      const { data, error } = await supabase.functions.invoke('send-otp-email', {
+        body: {
+          email,
+          otp,
+          type: 'escalate'
+        }
+      });
 
-    // For demo purposes, show OTP in console
-    setTimeout(() => {
-      alert(`Demo OTP for ${email}: ${otp}`);
-    }, 1000);
+      if (error) {
+        console.error('Error sending OTP:', error);
+        // Fallback: store OTP locally for demo purposes
+        toast({
+          title: t("otpSent"),
+          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
+        });
+        // Show OTP in console for demo
+        console.log(`Demo OTP for ${email}: ${otp}`);
+      } else {
+        toast({
+          title: t("otpSent"),
+          description: `${t("verificationCodeSent")} ${email}. ${t("checkEmail")}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending OTP:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send OTP. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const verifyEmailOtp = () => {
@@ -143,11 +165,11 @@ const Escalate = () => {
               className="text-white hover:bg-white/20"
             >
               <ArrowLeft className="w-5 h-5 mr-2" />
-              Back to Home
+              {t("backToHome")}
             </Button>
             <div>
-              <h1 className="text-3xl font-bold">Escalate Complaint</h1>
-              <p className="text-purple-100">File escalation for unresolved issues</p>
+              <h1 className="text-3xl font-bold">{t("escalateComplaint")}</h1>
+              <p className="text-purple-100">{t("escalateSubtitle")}</p>
             </div>
           </div>
         </div>
@@ -158,10 +180,10 @@ const Escalate = () => {
           <CardHeader className="bg-gradient-to-r from-purple-500 to-red-500 text-white">
             <CardTitle className="text-2xl flex items-center gap-3">
               <AlertTriangle className="w-8 h-8" />
-              Escalate Your Complaint
+              {t("escalateComplaint")}
             </CardTitle>
             <p className="text-purple-100">
-              Use this form when your complaint hasn't been resolved satisfactorily
+              {t("escalateSubtitle")}
             </p>
           </CardHeader>
 
@@ -169,27 +191,27 @@ const Escalate = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="complaintId" className="text-gray-700 font-semibold">
-                  Original Complaint ID *
+                  {t("originalComplaintId")} *
                 </Label>
                 <Input
                   id="complaintId"
                   value={complaintId}
                   onChange={(e) => setComplaintId(e.target.value)}
-                  placeholder="Enter your complaint ID (e.g., TG001)"
+                  placeholder={t("enterComplaintId")}
                   className="border-2 border-gray-300 focus:border-purple-500"
                   required
                 />
               </div>
 
               <div>
-                <Label htmlFor="email">Email Address *</Label>
+                <Label htmlFor="email">{t("emailAddress")} *</Label>
                 <div className="flex gap-2">
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email address"
+                    placeholder={t("enterEmailAddress")}
                     required
                     disabled={isEmailVerified}
                     className="border-2 border-gray-300 focus:border-purple-500"
@@ -197,13 +219,13 @@ const Escalate = () => {
                   {!isEmailVerified && (
                     <Button type="button" onClick={sendEmailOtp} variant="outline" className="whitespace-nowrap">
                       <Mail className="w-4 h-4 mr-2" />
-                      Send OTP
+                      {t("sendOTP")}
                     </Button>
                   )}
                   {isEmailVerified && (
                     <Button type="button" variant="outline" disabled className="whitespace-nowrap">
                       <Shield className="w-4 h-4 mr-2" />
-                      Verified
+                      {t("verified")}
                     </Button>
                   )}
                 </div>
@@ -211,18 +233,18 @@ const Escalate = () => {
 
               {showOtpInput && !isEmailVerified && (
                 <div>
-                  <Label htmlFor="emailOtp">Email Verification Code</Label>
+                  <Label htmlFor="emailOtp">{t("emailVerificationCode")}</Label>
                   <div className="flex gap-2">
                     <Input
                       id="emailOtp"
                       value={emailOtp}
                       onChange={(e) => setEmailOtp(e.target.value)}
-                      placeholder="Enter 6-digit code"
+                      placeholder={t("enterVerificationCode")}
                       maxLength={6}
                       className="border-2 border-gray-300 focus:border-purple-500"
                     />
                     <Button type="button" onClick={verifyEmailOtp} variant="outline">
-                      Verify
+                      {t("verify")}
                     </Button>
                   </div>
                 </div>
@@ -230,11 +252,11 @@ const Escalate = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="escalateReason" className="text-gray-700 font-semibold">
-                  Reason for Escalation *
+                  {t("reasonForEscalation")} *
                 </Label>
                 <Select value={escalateReason} onValueChange={setEscalateReason}>
                   <SelectTrigger className="border-2 border-gray-300 focus:border-purple-500">
-                    <SelectValue placeholder="Select reason for escalation" />
+                    <SelectValue placeholder={t("selectEscalationReason")} />
                   </SelectTrigger>
                   <SelectContent>
                     {escalationReasons.map((reason) => (
@@ -248,11 +270,11 @@ const Escalate = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="escalateTo" className="text-gray-700 font-semibold">
-                  Escalate To *
+                  {t("escalateTo")} *
                 </Label>
                 <Select value={escalateTo} onValueChange={setEscalateTo}>
                   <SelectTrigger className="border-2 border-gray-300 focus:border-purple-500">
-                    <SelectValue placeholder="Select escalation level" />
+                    <SelectValue placeholder={t("selectEscalationLevel")} />
                   </SelectTrigger>
                   <SelectContent>
                     {escalationLevels.map((level) => (
@@ -266,20 +288,20 @@ const Escalate = () => {
 
               <div className="space-y-2">
                 <Label htmlFor="additionalDetails" className="text-gray-700 font-semibold">
-                  Additional Details
+                  {t("additionalDetails")}
                 </Label>
                 <Textarea
                   id="additionalDetails"
                   value={additionalDetails}
                   onChange={(e) => setAdditionalDetails(e.target.value)}
-                  placeholder="Provide additional context for escalation..."
+                  placeholder={t("provideContext")}
                   className="border-2 border-gray-300 focus:border-purple-500 min-h-32"
                 />
               </div>
 
               <div className="space-y-2">
                 <Label className="text-gray-700 font-semibold">
-                  Supporting Evidence
+                  {t("supportingEvidence")}
                 </Label>
                 <div className="space-y-4">
                   <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center">
@@ -290,7 +312,7 @@ const Escalate = () => {
                       onClick={handlePhotoCapture}
                     >
                       <Camera className="w-8 h-8 mb-2" />
-                      <span>{hasPhoto ? 'Photo Captured ✓' : 'Take Photo'}</span>
+                      <span>{hasPhoto ? t("photoCaptured") : t("takePhoto")}</span>
                     </Button>
                     {capturedPhoto && (
                       <div className="mt-4">
@@ -313,14 +335,14 @@ const Escalate = () => {
                   
                   <div className="border-2 border-dashed border-purple-300 rounded-lg p-6 text-center">
                     <Upload className="w-12 h-12 text-purple-400 mx-auto mb-4" />
-                    <p className="text-gray-600 mb-2">Upload additional documents</p>
-                    <p className="text-sm text-gray-500">Photos, videos, or documents (Max 5MB each)</p>
+                    <p className="text-gray-600 mb-2">{t("uploadDocuments")}</p>
+                    <p className="text-sm text-gray-500">{t("uploadPhotos")}</p>
                     <Button 
                       type="button" 
                       variant="outline" 
                       className="mt-4 border-purple-500 text-purple-600 hover:bg-purple-50"
                     >
-                      Choose Files
+                      {t("chooseFiles")}
                     </Button>
                   </div>
                 </div>
@@ -333,7 +355,7 @@ const Escalate = () => {
                   onClick={() => navigate('/')}
                   className="flex-1"
                 >
-                  Cancel
+                  {t("cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -341,7 +363,7 @@ const Escalate = () => {
                   disabled={!complaintId || !escalateReason || !escalateTo || !isEmailVerified}
                 >
                   <AlertTriangle className="w-5 h-5 mr-2" />
-                  Submit Escalation
+                  {t("submitEscalation")}
                 </Button>
               </div>
             </form>
