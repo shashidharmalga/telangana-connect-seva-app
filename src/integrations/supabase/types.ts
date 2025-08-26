@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      complaints: {
+        Row: {
+          description: string
+          district: string
+          escalated_at: string | null
+          id: string
+          issue_type: string
+          officer_id: string | null
+          priority: string
+          resolved_at: string | null
+          status: string
+          submitted_date: string
+          updated_at: string
+          user_id: string | null
+          village: string
+        }
+        Insert: {
+          description: string
+          district: string
+          escalated_at?: string | null
+          id?: string
+          issue_type: string
+          officer_id?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          submitted_date?: string
+          updated_at?: string
+          user_id?: string | null
+          village: string
+        }
+        Update: {
+          description?: string
+          district?: string
+          escalated_at?: string | null
+          id?: string
+          issue_type?: string
+          officer_id?: string | null
+          priority?: string
+          resolved_at?: string | null
+          status?: string
+          submitted_date?: string
+          updated_at?: string
+          user_id?: string | null
+          village?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "complaints_officer_id_fkey"
+            columns: ["officer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       expenses: {
         Row: {
           amount: number | null
@@ -43,6 +99,72 @@ export type Database = {
           transaction_date?: string | null
           transaction_id?: string | null
           type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      otp_verifications: {
+        Row: {
+          attempts: number
+          created_at: string
+          expires_at: string
+          id: string
+          otp_hash: string
+          phone_number: string
+          verified: boolean
+        }
+        Insert: {
+          attempts?: number
+          created_at?: string
+          expires_at: string
+          id?: string
+          otp_hash: string
+          phone_number: string
+          verified?: boolean
+        }
+        Update: {
+          attempts?: number
+          created_at?: string
+          expires_at?: string
+          id?: string
+          otp_hash?: string
+          phone_number?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          employee_id: string
+          first_name: string | null
+          gov_field: string
+          id: string
+          is_officer: boolean
+          last_name: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          first_name?: string | null
+          gov_field: string
+          id?: string
+          is_officer?: boolean
+          last_name?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          first_name?: string | null
+          gov_field?: string
+          id?: string
+          is_officer?: boolean
+          last_name?: string | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
